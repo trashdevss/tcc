@@ -1,13 +1,15 @@
+
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:tcc_3/common/constants/mutations/add_new_transaction.dart';
+import 'package:tcc_3/common/constants/mutations/delete_transactions.dart';
 import 'package:tcc_3/common/constants/mutations/update_transaction.dart';
-import 'package:tcc_3/common/constants/queries/get_all_transactions.dart';
 import 'package:tcc_3/common/constants/queries/get_balances.dart';
-import 'package:tcc_3/common/constants/queries/get_latest_transactions.dart';
+import 'package:tcc_3/common/constants/queries/get_transactions.dart';
 import 'package:tcc_3/common/models/balances_model.dart';
 import 'package:tcc_3/common/models/transaction_model.dart';
-import 'package:tcc_3/locator.dart';
-import 'package:tcc_3/services/graphql_service.dart';
+import 'package:tcc_3/data/data_result.dart';
+import 'package:tcc_3/data/exceptions.dart';
+import 'package:tcc_3/services/api_services.dart';
 
 
 
@@ -17,71 +19,64 @@ abstract class TransactionRepository {
     String userId,
   );
 
-  Future<bool> updateTransaction(
-    TransactionModel transactionModel,
-  );
+  Future<bool> updateTransaction(TransactionModel transactionModel);
 
-  Future<List<TransactionModel>> getAllTransactions({
-    required int limit,
-    required int offset,
+  Future<List<TransactionModel>> getTransactions({
+    int? limit,
+    int? offset,
   });
 
-  Future<List<TransactionModel>> getLatestTransactions();
+  Future<DataResult<bool>> deleteTransaction(String id);
 
   Future<BalancesModel> getBalances();
 }
 
 class TransactionRepositoryImpl implements TransactionRepository {
-  final client = locator.get<GraphQLService>().client;
+  const TransactionRepositoryImpl({
+    required this.graphqlService,
+  });
 
-
-
-
-
+  final ApiService<GraphQLClient, QueryResult> graphqlService;
   @override
   Future<bool> addTransaction(
     TransactionModel transaction,
     String userId,
   ) async {
     try {
-      final response = await client.query(QueryOptions(
-        variables: {
-
-          "category": transaction.category,
-          "date":
-              DateTime.fromMillisecondsSinceEpoch(transaction.date).toString(),
-          "description": transaction.description,
-          "status": transaction.status,
-          "value": transaction.value,
+      final response = await graphqlService.create(
+        path: mAddNewTransaction,
+        params: {
+          ...transaction.toMap(),
           "user_id": userId,
         },
-        document: gql(mAddNewTransaction),
-      ));
-      final parsedData = TransactionModel.fromMap(
-          response.data?["insert_transaction_one"] ?? {});
+      );
 
-      if (parsedData.id != null) {
-        return true;
+      if (response.data == null || response.hasException) {
+        throw Exception(response.exception);
       }
-      throw Exception(response.exception);
+
+      return true;
     } catch (e) {
       rethrow;
     }
   }
 
   @override
-  Future<List<TransactionModel>> getAllTransactions({
-    required int limit,
-    required int offset,
+  Future<List<TransactionModel>> getTransactions({
+    int? limit,
+    int? offset,
   }) async {
     try {
-      final response = await client.query(
-        QueryOptions(document: gql(qGetAllTransactions), variables: {
-
+      final response = await graphqlService.read(
+        path: qGetTrasactions,
+        params: {
           'limit': limit,
           'offset': offset,
-        }),
+        },
       );
+      if (response.data == null || response.hasException) {
+        throw Exception();
+      }
 
       final parsedData = List.from(response.data?['transaction'] ?? []);
 
@@ -96,8 +91,11 @@ class TransactionRepositoryImpl implements TransactionRepository {
   @override
   Future<BalancesModel> getBalances() async {
     try {
-      final response =
-          await client.query(QueryOptions(document: gql(qGetBalances)));
+      final response = await graphqlService.read(path: qGetBalances);
+
+      if (response.data == null || response.hasException) {
+        throw Exception();
+      }
 
       final balances = BalancesModel.fromMap(response.data ?? {});
 
@@ -112,47 +110,45 @@ class TransactionRepositoryImpl implements TransactionRepository {
     TransactionModel transaction,
   ) async {
     try {
-      final response = await client.query(QueryOptions(
-        variables: {
+      final response = await graphqlService.update(
+      path: mUpdateTransaction,
+      params: transaction.toMap(includeId: true),
+);
 
-          "id": transaction.id,
-          "category": transaction.category,
-          "date":
-              DateTime.fromMillisecondsSinceEpoch(transaction.date).toString(),
-          "description": transaction.description,
-          "status": transaction.status,
-          "value": transaction.value,
-        },
-        document: gql(mUpdateTransaction),
-      ));
-      final parsedData = TransactionModel.fromMap(
-          response.data?["update_transaction_by_pk"] ?? {});
-
-      if (parsedData.id != null) {
-        return true;
-
-
+      if (response.data == null || response.hasException) {
+        throw Exception();
       }
-      throw Exception(response.exception);
+
+      return true;
     } catch (e) {
       rethrow;
     }
   }
 
   @override
-  Future<List<TransactionModel>> getLatestTransactions() async {
+  Future<DataResult<bool>> deleteTransaction(String id) async {
     try {
-      final response = await client
-          .query(QueryOptions(document: gql(qGetLatestTransactions)));
-
-
-      final parsedData = List.from(response.data?['transaction'] ?? []);
-
-      final transactions =
-          parsedData.map((e) => TransactionModel.fromMap(e)).toList();
-      return transactions;
+      final response = await graphqlService.delete(
+        path: mDeleteTransaction,
+        params: {'id': id},
+      );
+      if (response.data == null || response.hasException) {
+        return DataResult.success(false);
+      } else {
+        return DataResult.success(true);
+      }
+    } on ServerException {
+      return DataResult.failure(
+          const ConnectionException(code: 'connection-error'));
+    } on GraphQLError catch (e) {
+      return DataResult.failure(
+        APIException(
+          code: 0,
+          textCode: e.extensions?['code'],
+        ),
+      );
     } catch (e) {
-      rethrow;
+      return DataResult.failure(const GeneralException());
     }
   }
 }

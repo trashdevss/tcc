@@ -1,19 +1,16 @@
 import 'package:flutter/foundation.dart';
 
-import '../../services/graphql_service.dart';
+
 import '../../services/secure_storage.dart';
 import 'splash_state.dart';
 
 class SplashController extends ChangeNotifier {
-  final SecureStorage secureStorage;
-  final GraphQLService graphQLService;
-
   SplashController({
-    required this.secureStorage,
-    required this.graphQLService,
+    required this.secureStorageService,
+
   });
 
-
+  final SecureStorageService secureStorageService;
 
 
   SplashState _state = SplashStateInitial();
@@ -26,9 +23,9 @@ class SplashController extends ChangeNotifier {
   }
 
   Future<void> isUserLogged() async {
-    final result = await secureStorage.readOne(key: "CURRENT_USER");
+    final result = await secureStorageService.readOne(key: "CURRENT_USER");
     if (result != null) {
-      await graphQLService.init();
+
       _changeState(AuthenticatedUser());
     } else {
       _changeState(UnauthenticatedUser());

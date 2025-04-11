@@ -1,9 +1,8 @@
-import 'dart:developer';
-
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:tcc_3/common/models/user_model.dart';
-import 'package:tcc_3/services/auth_service.dart';
+
+import '../common/models/user_model.dart';
+import 'auth_service.dart';
 
 class FirebaseAuthService implements AuthService {
   final _auth = FirebaseAuth.instance;
@@ -19,21 +18,17 @@ class FirebaseAuthService implements AuthService {
         email: email,
         password: password,
       );
-
       if (result.user != null) {
-        final token = await result.user!.getIdToken();
-        log("Token inicial gerado: $token");
-
         return UserModel(
-          name: result.user!.displayName ?? '',
-          email: result.user!.email ?? '',
-          id: result.user!.uid,
+          name: _auth.currentUser?.displayName,
+          email: _auth.currentUser?.email,
+          id: _auth.currentUser?.uid,
         );
       } else {
-        throw Exception("Erro ao fazer login.");
+        throw Exception();
       }
     } on FirebaseAuthException catch (e) {
-      throw Exception(e.message ?? "Erro ao fazer login.");
+      throw e.message ?? "null";
     } catch (e) {
       rethrow;
     }
@@ -47,10 +42,9 @@ class FirebaseAuthService implements AuthService {
   }) async {
     try {
       await _functions.httpsCallable('registerUser').call({
-        'name': name,
-        'email': email,
-        'password': password,
-        'displayName': name,
+        "email": email,
+        "password": password,
+        "displayName": name,
       });
 
       final result = await _auth.signInWithEmailAndPassword(
@@ -59,26 +53,18 @@ class FirebaseAuthService implements AuthService {
       );
 
       if (result.user != null) {
-        final token = await _auth.currentUser?.getIdToken(true);
-        log("Token após cadastro: ${token ?? 'nulo'}");
-
-        
-        if (name != null) {
-          await result.user!.updateDisplayName(name);
-        }
- 
         return UserModel(
-          name: _auth.currentUser?.displayName ?? name ?? '',
-          email: _auth.currentUser?.email ?? email,
-          id: _auth.currentUser?.uid ?? result.user!.uid,
+          name: _auth.currentUser?.displayName,
+          email: _auth.currentUser?.email,
+          id: _auth.currentUser?.uid,
         );
       } else {
-        throw Exception("Erro ao cadastrar usuário.");
+        throw Exception();
       }
     } on FirebaseAuthException catch (e) {
-      throw Exception(e.message ?? "Erro ao cadastrar.");
+      throw e.message ?? "null";
     } on FirebaseFunctionsException catch (e) {
-      throw Exception(e.message ?? "Erro na Cloud Function.");
+      throw e.message ?? "null";
     } catch (e) {
       rethrow;
     }
@@ -92,18 +78,18 @@ class FirebaseAuthService implements AuthService {
       rethrow;
     }
   }
-  
-    @override
+
+  @override
   Future<String> get userToken async {
     try {
       final token = await _auth.currentUser?.getIdToken();
       if (token != null) {
         return token;
       } else {
-        throw Exception('Usuário não encontrado');
+        return '';
       }
     } catch (e) {
-      rethrow;
+      return '';
     }
   }
 }

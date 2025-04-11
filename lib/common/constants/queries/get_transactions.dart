@@ -1,12 +1,12 @@
-const String qGetAllTransactions = r"""
-query getAllTransactions($limit: Int!, $offset: Int!) {
+const String qGetTrasactions = r"""
+query getTransactions($limit: Int, $offset: Int) {
   transaction(limit: $limit, order_by: {date: desc}, offset: $offset) {
     category
     created_at
     date
     description
     id
-    status 
+    status
     user_id
     value
   }

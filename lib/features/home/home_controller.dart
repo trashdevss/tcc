@@ -5,9 +5,11 @@ import '../../common/models/transaction_model.dart';
 import 'home_state.dart';
 
 class HomeController extends ChangeNotifier {
-  final TransactionRepository _transactionRepository;
-  HomeController(this._transactionRepository);
+  HomeController({
+    required this.transactionRepository,
+  });
 
+  final TransactionRepository transactionRepository;
 
   HomeState _state = HomeStateInitial();
 
@@ -31,7 +33,7 @@ class HomeController extends ChangeNotifier {
   Future<void> getLatestTransactions() async {
     _changeState(HomeStateLoading());
     try {
-      _transactions = await _transactionRepository.getLatestTransactions();
+      _transactions = await transactionRepository.getTransactions(limit: 5);
       _changeState(HomeStateSuccess(transactions));
     } catch (e) {
       _changeState(HomeStateError(toString()));

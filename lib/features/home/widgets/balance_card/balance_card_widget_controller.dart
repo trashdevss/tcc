@@ -1,16 +1,16 @@
+
 import 'package:flutter/foundation.dart';
 import 'package:tcc_3/features/repositories/transaction_repository.dart';
-
 import '../../../../common/models/balances_model.dart';
 import 'balance_card_widget_state.dart';
 
 class BalanceCardWidgetController extends ChangeNotifier {
-  final TransactionRepository transactionRepository;
+
   BalanceCardWidgetController({
     required this.transactionRepository,
   });
 
-
+  final TransactionRepository transactionRepository;
 
   BalanceCardWidgetState _state = BalanceCardWidgetStateInitial();
 

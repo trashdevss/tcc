@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_3/common/widgets/transaction_listview/transaction_listview.dart';
 import 'package:tcc_3/features/home/home_controller.dart';
 import 'package:tcc_3/features/home/widgets/balance_card/balance_card_widget_controller.dart';
 import 'package:tcc_3/features/home/widgets/balance_card/balance_card_widget_state.dart';
@@ -9,7 +10,6 @@ import '../../common/extensions/sizes.dart';
 import '../../common/widgets/app_header.dart';
 import '../../common/widgets/base_page.dart';
 import '../../common/widgets/custom_circular_progress_indicator.dart';
-import '../../common/widgets/transaction_listview.dart';
 import '../../locator.dart';
 
 import 'wallet_controller.dart';
@@ -36,6 +36,7 @@ class _WalletPageState extends State<WalletPage>
       vsync: this,
     );
     walletController.getAllTransactions();
+    ballanceController.getBalances();
   }
 
   @override
@@ -163,6 +164,7 @@ class _WalletPageState extends State<WalletPage>
                               walletController.transactions.isNotEmpty) {
                             return TransactionListView(
                               transactionList: walletController.transactions,
+                              itemCount: walletController.transactions.length,
                               isLoading: walletController.isLoading,
                               onLoading: (value) {
                                 if (value) {

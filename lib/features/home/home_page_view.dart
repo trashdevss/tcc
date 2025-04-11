@@ -18,35 +18,22 @@ class HomePageView extends StatefulWidget {
 }
 
 class _HomePageViewState extends State<HomePageView> {
-  late final HomeController homeController;
-  late final BalanceCardWidgetController balanceCardWidgetController;
-  late final WalletController walletController;
+  final homeController = locator.get<HomeController>();
+
+
 
   @override
   void initState() {
-    super.initState();
-    homeController = locator.get<HomeController>();
-    balanceCardWidgetController = locator.get<BalanceCardWidgetController>();
-    walletController = locator.get<WalletController>();
-
     homeController.setPageController = PageController();
+    super.initState();
   }
 
   @override
   void dispose() {
-    homeController.pageController.dispose();
-    // ❌ REMOVIDO: Não resetar os singletons
+    locator.resetLazySingleton<HomeController>();
+    locator.resetLazySingleton<BalanceCardWidgetController>();
+    locator.resetLazySingleton<WalletController>();
     super.dispose();
-  }
-
-  Future<void> _navigateToTransactionPage() async {
-    final result = await Navigator.pushNamed(context, '/transaction');
-    if (result == true) {
-      await homeController.getLatestTransactions();
-      await balanceCardWidgetController.getBalances();
-      await walletController.getAllTransactions();
-      setState(() {});
-    }
   }
 
   @override
@@ -63,7 +50,14 @@ class _HomePageViewState extends State<HomePageView> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToTransactionPage,
+        onPressed: () async {
+          final result = await Navigator.pushNamed(context, '/transaction');
+          if (result != null) {
+            homeController.getLatestTransactions();
+            locator.get<BalanceCardWidgetController>().getBalances();
+            locator.get<WalletController>().getAllTransactions();
+          }
+        },
         child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -75,26 +69,34 @@ class _HomePageViewState extends State<HomePageView> {
             label: 'home',
             primaryIcon: Icons.home,
             secondaryIcon: Icons.home_outlined,
-            onPressed: () => homeController.pageController.jumpToPage(0),
+            onPressed: () => homeController.pageController.jumpToPage(
+              0,
+            ),
           ),
           CustomBottomAppBarItem(
             label: 'stats',
             primaryIcon: Icons.analytics,
             secondaryIcon: Icons.analytics_outlined,
-            onPressed: () => homeController.pageController.jumpToPage(1),
+            onPressed: () => homeController.pageController.jumpToPage(
+              1,
+            ),
           ),
           CustomBottomAppBarItem.empty(),
           CustomBottomAppBarItem(
             label: 'wallet',
             primaryIcon: Icons.account_balance_wallet,
             secondaryIcon: Icons.account_balance_wallet_outlined,
-            onPressed: () => homeController.pageController.jumpToPage(2),
+            onPressed: () => homeController.pageController.jumpToPage(
+              2,
+            ),
           ),
           CustomBottomAppBarItem(
             label: 'profile',
             primaryIcon: Icons.person,
             secondaryIcon: Icons.person_outline,
-            onPressed: () => homeController.pageController.jumpToPage(3),
+            onPressed: () => homeController.pageController.jumpToPage(
+              3,
+            ),
           ),
         ],
       ),

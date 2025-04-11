@@ -1,31 +1,49 @@
 import 'dart:convert';
 
+
+import 'package:tcc_3/common/extensions/date_formatter.dart';
+
 class TransactionModel {
-  final String description;
-  final String category;
-  final double value;
-  final int date;
-  final bool status;
-  final String? id;
+
+
+
+
+
+
   TransactionModel({
     required this.category,
     required this.description,
     required this.value,
     required this.date,
     required this.status,
+    required this.createdAt,
     this.id,
   });
 
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'description': description,
-      'category': category,
-      'value': value,
-      'date': date,
-      'status': status,
-      'id': id,
-    };
+  final String description;
+  final String category;
+  final double value;
+  final int date;
+  final bool status;
+  final int createdAt;
+  final String? id;
+
+ Map<String, dynamic> toMap({bool includeId = false}) {
+  final map = <String, dynamic>{
+    'description': description,
+    'category': category,
+    'value': value,
+    'date': DateTime.fromMillisecondsSinceEpoch(date).formatISOTime,
+    'status': status,
+  };
+
+  if (includeId && id != null) {
+    map['id'] = id;
   }
+
+  return map;
+}
+
 
   factory TransactionModel.fromMap(Map<String, dynamic> map) {
     return TransactionModel(
@@ -33,6 +51,8 @@ class TransactionModel {
       category: map['category'] as String,
       value: double.tryParse(map['value'].toString()) ?? 0,
       date: DateTime.parse(map['date'] as String).millisecondsSinceEpoch,
+      createdAt:
+          DateTime.parse(map['created_at'] as String).millisecondsSinceEpoch,
       status: map['status'] as bool,
       id: map['id'] as String?,
     );
