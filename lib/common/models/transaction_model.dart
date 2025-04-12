@@ -1,15 +1,9 @@
 import 'dart:convert';
 
-
 import 'package:tcc_3/common/extensions/date_formatter.dart';
+import 'package:uuid/uuid.dart';
 
 class TransactionModel {
-
-
-
-
-
-
   TransactionModel({
     required this.category,
     required this.description,
@@ -28,22 +22,18 @@ class TransactionModel {
   final int createdAt;
   final String? id;
 
- Map<String, dynamic> toMap({bool includeId = false}) {
-  final map = <String, dynamic>{
-    'description': description,
-    'category': category,
-    'value': value,
-    'date': DateTime.fromMillisecondsSinceEpoch(date).formatISOTime,
-    'status': status,
-  };
-
-  if (includeId && id != null) {
-    map['id'] = id;
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'description': description,
+      'category': category,
+      'value': value,
+      'date': DateTime.fromMillisecondsSinceEpoch(date).formatISOTime,
+      'created_at':
+          DateTime.fromMillisecondsSinceEpoch(createdAt).formatISOTime,
+      'status': status,
+      'id': id ?? const Uuid().v4(),
+    };
   }
-
-  return map;
-}
-
 
   factory TransactionModel.fromMap(Map<String, dynamic> map) {
     return TransactionModel(

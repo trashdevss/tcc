@@ -1,12 +1,12 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:developer';
-
-
 import 'package:flutter/material.dart';
 import 'package:tcc_3/common/constants/routes.dart';
 import 'package:tcc_3/common/utils/validator.dart';
 import 'package:tcc_3/common/widgets/custom_circular_progress_indicator.dart';
 import 'package:tcc_3/common/widgets/password_form_field.dart';
+import 'package:tcc_3/features/sign_in/sign_in_controller.dart';
+import 'package:tcc_3/features/sign_in/sign_in_state.dart';
 import 'package:tcc_3/locator.dart';
 
 import '../../common/constants/app_colors.dart';
@@ -15,8 +15,6 @@ import '../../common/widgets/custom_bottom_sheet.dart';
 import '../../common/widgets/custom_text_form_field.dart';
 import '../../common/widgets/multi_text_button.dart';
 import '../../common/widgets/primary_button.dart';
-import 'sign_in_controller.dart';
-import 'sign_in_state.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -29,28 +27,28 @@ class _SignInPageState extends State<SignInPage> with CustomModalSheetMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _controller = locator.get<SignInController>();
+  final _signInController = locator.get<SignInController>();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _controller.dispose();
+    _signInController.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(
+    _signInController.addListener(
       () {
-        if (_controller.state is SignInStateLoading) {
+        if (_signInController.state is SignInStateLoading) {
           showDialog(
             context: context,
             builder: (context) => const CustomCircularProgressIndicator(),
           );
         }
-        if (_controller.state is SignInStateSuccess) {
+        if (_signInController.state is SignInStateSuccess) {
           Navigator.pop(context);
           Navigator.pushReplacementNamed(
             context,
@@ -58,105 +56,100 @@ class _SignInPageState extends State<SignInPage> with CustomModalSheetMixin {
           );
         }
 
-        if (_controller.state is SignInStateError) {
-          final error = _controller.state as SignInStateError;
+        if (_signInController.state is SignInStateError) {
+          final error = _signInController.state as SignInStateError;
           Navigator.pop(context);
           showCustomModalBottomSheet(
             context: context,
             content: error.message,
-            buttonText: "Tentar novamente",
+            buttonText: "Try again",
           );
         }
       },
     );
   }
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    body: SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: ListView(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          Text(
+            'Welcome Back!',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.mediumText36.copyWith(
+              color: AppColors.greenOne,
+            ),
+          ),
+          Image.asset(
+            'assets/images/sign_in_image.png',
+          ),
+          Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                CustomTextFormField(
+                  controller: _emailController,
+                  labelText: "your email",
+                  hintText: "john@email.com",
+                  validator: Validator.validateEmail,
+                ),
+                PasswordFormField(
+                  controller: _passwordController,
+                  labelText: "your password",
+                  hintText: "*********",
+                  validator: Validator.validatePassword,
+                  helperText:
+                      "Must have at least 8 characters, 1 capital letter and 1 number.",
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 32.0,
+              right: 32.0,
+              top: 16.0,
+              bottom: 4.0,
+            ),
+            child: PrimaryButton(
+              text: 'Sign In',
+              onPressed: () {
+                final valid = _formKey.currentState != null &&
+                    _formKey.currentState!.validate();
+                if (valid) {
+                  _signInController.signIn(
+                    email: _emailController.text,
+                    password: _passwordController.text,
+                  );
+                } else {
+                  log("erro ao logar");
+                }
+              },
+            ),
+          ),
+          MultiTextButton(
+            onPressed: () => Navigator.popAndPushNamed(
+              context,
+              NamedRoute.signUp,
+            ),
             children: [
-              const SizedBox(height: 32),
               Text(
-                'Welcome Back!',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.mediumText36.copyWith(
+                'Don\'t have account? ',
+                style: AppTextStyles.smallText.copyWith(
+                  color: AppColors.grey,
+                ),
+              ),
+              Text(
+                'Sign Up',
+                style: AppTextStyles.smallText.copyWith(
                   color: AppColors.greenOne,
                 ),
-              ),
-              const SizedBox(height: 24),
-              Image.asset(
-                'assets/images/sign_in_image.png',
-                height: 180, // Limita o tamanho da imagem
-              ),
-              const SizedBox(height: 32),
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    CustomTextFormField(
-                      controller: _emailController,
-                      labelText: "your email",
-                      hintText: "john@email.com",
-                      validator: Validator.validateEmail,
-                    ),
-                    const SizedBox(height: 16),
-                    PasswordFormField(
-                      controller: _passwordController,
-                      labelText: "your password",
-                      hintText: "*********",
-                      validator: Validator.validatePassword,
-                      helperText:
-                          "Must have at least 8 characters, 1 capital letter and 1 number.",
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-              PrimaryButton(
-                text: 'Sign In',
-                onPressed: () {
-                  final valid = _formKey.currentState?.validate() ?? false;
-                  if (valid) {
-                    _controller.signIn(
-                      email: _emailController.text,
-                      password: _passwordController.text,
-                    );
-                  } else {
-                    log("erro ao logar");
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              MultiTextButton(
-                onPressed: () => Navigator.popAndPushNamed(
-                  context,
-                  NamedRoute.signUp,
-                ),
-                children: [
-                  Text(
-                    'Don\'t have account? ',
-                    style: AppTextStyles.smallText.copyWith(
-                      color: AppColors.grey,
-                    ),
-                  ),
-                  Text(
-                    'Sign Up',
-                    style: AppTextStyles.smallText.copyWith(
-                      color: AppColors.greenOne,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
 }

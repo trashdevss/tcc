@@ -1,6 +1,8 @@
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tcc_3/common/models/user_model.dart';
+import 'package:tcc_3/data/data_result.dart';
 import 'package:tcc_3/features/sign_in/sign_in_controller.dart';
 import 'package:tcc_3/features/sign_in/sign_in_state.dart';
 
@@ -20,7 +22,6 @@ void main() {
     signInController = SignInController(
       authService: mockFirebaseAuthService,
       secureStorageService: mockSecureStorage,
-
     );
     user = UserModel(
       name: 'User',
@@ -47,7 +48,7 @@ void main() {
           password: 'user@123',
         ),
       ).thenAnswer(
-        (_) async => user,
+        (_) async => DataResult.success(user),
       );
 
       await signInController.signIn(

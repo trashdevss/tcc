@@ -1,4 +1,7 @@
+
 import 'package:flutter/material.dart';
+import 'package:tcc_3/common/constants/routes.dart';
+import 'package:tcc_3/common/widgets/custom_bottom_sheet.dart';
 
 import '../../common/constants/app_colors.dart';
 import '../../common/constants/app_text_styles.dart';
@@ -19,7 +22,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with CustomModalSheetMixin {
   final homeController = locator.get<HomeController>();
   final balanceController = locator.get<BalanceCardWidgetController>();
 
@@ -28,6 +31,28 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     homeController.getLatestTransactions();
     balanceController.getBalances();
+
+    homeController.addListener(() {
+      if (homeController.state is HomeStateError) {
+        showCustomModalBottomSheet(
+          context: context,
+          content: (homeController.state as HomeStateError).message,
+          buttonText: 'Go to login',
+          isDismissible: false,
+          onPressed: () => Navigator.pushNamedAndRemoveUntil(
+            context,
+            NamedRoute.signIn,
+            ModalRoute.withName(NamedRoute.initial),
+          ),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    locator.resetLazySingleton<BalanceCardWidgetController>();
+    super.dispose();
   }
 
   @override

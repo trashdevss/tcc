@@ -9,7 +9,6 @@ import 'features/sign_in/sign_in_controller.dart';
 import 'features/sign_up/sign_up_controller.dart';
 import 'features/splash/splash_controller.dart';
 import 'features/transactions/transaction_controller.dart';
-
 import 'services/auth_service.dart';
 import 'services/firebase_auth_service.dart';
 import 'services/graphql_service.dart';
@@ -22,8 +21,11 @@ void setupDependencies() {
     () => FirebaseAuthService(),
   );
 
-  locator.registerSingletonAsync<GraphQLService>(() async =>
-      GraphQLService(authService: locator.get<AuthService>()).init());
+  locator.registerSingletonAsync<GraphQLService>(
+    () async => GraphQLService(
+      authService: locator.get<AuthService>(),
+    ).init(),
+  );
 
   locator.registerFactory<SplashController>(
     () => SplashController(
@@ -45,11 +47,17 @@ void setupDependencies() {
     ),
   );
 
-  locator.registerFactory<TransactionRepository>(() =>
-      TransactionRepositoryImpl(graphqlService: locator.get<GraphQLService>()));
+  locator.registerFactory<TransactionRepository>(
+    () => TransactionRepositoryImpl(
+      graphqlService: locator.get<GraphQLService>(),
+    ),
+  );
 
-  locator.registerLazySingleton<HomeController>(() => HomeController(
-      transactionRepository: locator.get<TransactionRepository>()));
+  locator.registerLazySingleton<HomeController>(
+    () => HomeController(
+      transactionRepository: locator.get<TransactionRepository>(),
+    ),
+  );
 
   locator.registerLazySingleton<BalanceCardWidgetController>(
     () => BalanceCardWidgetController(
@@ -71,7 +79,8 @@ void setupDependencies() {
   );
 
   locator.registerFactory<TransactionListViewController>(
-      () => TransactionListViewController(
-            transactionRepository: locator.get<TransactionRepository>(),
-          ));
+    () => TransactionListViewController(
+      transactionRepository: locator.get<TransactionRepository>(),
+    ),
+  );
 }

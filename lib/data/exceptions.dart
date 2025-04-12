@@ -64,24 +64,28 @@ class AuthException extends Failure {
   @override
   String get message {
     switch (code) {
-  case 'user-not-authenticated':
-    return 'Sua sessão expirou. Por favor, faça login novamente.';
-  case 'email-already-exists':
-    return 'O e-mail fornecido já está em uso. Verifique suas informações ou crie uma nova conta.';
-  case 'user-not-found':
-  case 'wrong-password':
-    return 'E-mail ou senha incorretos. Verifique suas informações ou crie uma nova conta.';
-  case 'network-request-failed':
-    return 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.';
-  case 'internal':
-    return 'Não foi possível criar sua conta neste momento. Verifique suas informações e tente novamente.';
-  default:
-    return 'Ocorreu um erro durante a autenticação. Por favor, tente novamente mais tarde.';
-}
+      case 'session-expired':
+      case 'invalid-jwt':
+      case 'invalid-headers':
 
+      case 'user-not-authenticated':
+        return 'Your session has expired. Please loggin again.';
+      case 'email-already-exists':
+        return 'The provided email is already in use. Please check your information or create a new account.';
+      case 'user-not-found':
+      case 'wrong-password':
+        return 'Email or password are incorrect. Please check your information or create a new account.';
+      case 'network-request-failed':
+        return 'It was not possible to connect to the remote server. Please check you connection and try again.';
+      case 'too-many-requests':
+        return 'Due to consecutive failed attempts, you cannot login at this time. Please try again in a few moments.';
+      case 'internal':
+        return 'It was not possible to create your account at this time. Please check your information and try again.';
+      default:
+        return 'There was an error while authenticating. Please try again later.';
     }
   }
-
+}
 
 class SecureStorageException extends Failure {
   const SecureStorageException();

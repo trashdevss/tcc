@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 
 import '../../services/auth_service.dart';
-
 import '../../services/secure_storage.dart';
 import 'sign_up_state.dart';
 
@@ -9,12 +8,10 @@ class SignUpController extends ChangeNotifier {
   SignUpController({
     required this.authService,
     required this.secureStorageService,
-
   });
 
   final AuthService authService;
   final SecureStorageService secureStorageService;
-
 
   SignUpState _state = SignUpStateInitial();
 
@@ -32,26 +29,26 @@ class SignUpController extends ChangeNotifier {
   }) async {
     _changeState(SignUpStateLoading());
 
-    try {
-      final user = await authService.signUp(
-        name: name,
-        email: email,
-        password: password,
-      );
-      if (user.id != null) {
+    final result = await authService.signUp(
+      name: name,
+      email: email,
+      password: password,
+    );
+
+    result.fold(
+      (error) => _changeState(SignUpStateError(error.message)),
+      (data) async {
         await secureStorageService.write(
           key: "CURRENT_USER",
-          value: user.toJson(),
+          value: data.toJson(),
         );
 
-
-
         _changeState(SignUpStateSuccess());
-      } else {
-        throw Exception();
-      }
-    } catch (e) {
-      _changeState(SignUpStateError(e.toString()));
-    }
+      },
+    );
+
+
+
+
   }
 }

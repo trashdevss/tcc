@@ -1,11 +1,10 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:tcc_3/features/repositories/transaction_repository.dart';
+
 import '../../../../common/models/balances_model.dart';
 import 'balance_card_widget_state.dart';
 
 class BalanceCardWidgetController extends ChangeNotifier {
-
   BalanceCardWidgetController({
     required this.transactionRepository,
   });
@@ -30,11 +29,16 @@ class BalanceCardWidgetController extends ChangeNotifier {
 
   Future<void> getBalances() async {
     _changeState(BalanceCardWidgetStateLoading());
-    try {
-      _balances = await transactionRepository.getBalances();
-      _changeState(BalanceCardWidgetStateSuccess());
-    } catch (e) {
-      _changeState(BalanceCardWidgetStateError());
-    }
+
+    final result = await transactionRepository.getBalances();
+
+    result.fold(
+      (error) => _changeState(BalanceCardWidgetStateError()),
+      (data) {
+        _balances = data;
+
+        _changeState(BalanceCardWidgetStateSuccess());
+      },
+    );
   }
 }

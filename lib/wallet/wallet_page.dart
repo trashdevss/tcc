@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_3/common/widgets/transaction_listview/transaction_listview.dart';
+import 'package:tcc_3/common/widgets/custom_bottom_sheet.dart';
 import 'package:tcc_3/features/home/home_controller.dart';
 import 'package:tcc_3/features/home/widgets/balance_card/balance_card_widget_controller.dart';
 import 'package:tcc_3/features/home/widgets/balance_card/balance_card_widget_state.dart';
 
 import '../../common/constants/app_colors.dart';
 import '../../common/constants/app_text_styles.dart';
+import '../../common/constants/routes.dart';
 import '../../common/extensions/sizes.dart';
 import '../../common/widgets/app_header.dart';
 import '../../common/widgets/base_page.dart';
 import '../../common/widgets/custom_circular_progress_indicator.dart';
+import '../../common/widgets/transaction_listview/transaction_listview.dart';
 import '../../locator.dart';
 
 import 'wallet_controller.dart';
@@ -23,7 +25,7 @@ class WalletPage extends StatefulWidget {
 }
 
 class _WalletPageState extends State<WalletPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, CustomModalSheetMixin {
   final walletController = locator.get<WalletController>();
   final ballanceController = locator.get<BalanceCardWidgetController>();
   late final TabController _tabController;
@@ -37,11 +39,28 @@ class _WalletPageState extends State<WalletPage>
     );
     walletController.getAllTransactions();
     ballanceController.getBalances();
+
+    walletController.addListener(() {
+      if (walletController.state is WalletStateError) {
+        showCustomModalBottomSheet(
+          context: context,
+          content: (walletController.state as WalletStateError).message,
+          buttonText: 'Go to login',
+          isDismissible: false,
+          onPressed: () => Navigator.pushNamedAndRemoveUntil(
+            context,
+            NamedRoute.signIn,
+            ModalRoute.withName(NamedRoute.initial),
+          ),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     locator.resetLazySingleton<WalletController>();
+    locator.resetLazySingleton<BalanceCardWidgetController>();
     super.dispose();
   }
 

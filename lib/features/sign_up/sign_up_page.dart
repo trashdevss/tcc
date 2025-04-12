@@ -1,7 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:developer';
-
-
 import 'package:flutter/material.dart';
 import 'package:tcc_3/common/constants/routes.dart';
 import 'package:tcc_3/common/utils/uppercase_text_formatter.dart';
@@ -31,29 +29,29 @@ class _SignUpPageState extends State<SignUpPage> with CustomModalSheetMixin {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _controller = locator.get<SignUpController>();
+  final _signUpController = locator.get<SignUpController>();
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _controller.dispose();
+    _signUpController.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(
+    _signUpController.addListener(
       () {
-        if (_controller.state is SignUpStateLoading) {
+        if (_signUpController.state is SignUpStateLoading) {
           showDialog(
             context: context,
             builder: (context) => const CustomCircularProgressIndicator(),
           );
         }
-        if (_controller.state is SignUpStateSuccess) {
+        if (_signUpController.state is SignUpStateSuccess) {
           Navigator.pop(context);
 
           Navigator.pushReplacementNamed(
@@ -62,131 +60,125 @@ class _SignUpPageState extends State<SignUpPage> with CustomModalSheetMixin {
           );
         }
 
-        if (_controller.state is SignUpStateError) {
-          final error = _controller.state as SignUpStateError;
+        if (_signUpController.state is SignUpStateError) {
+          final error = _signUpController.state as SignUpStateError;
           Navigator.pop(context);
           showCustomModalBottomSheet(
             context: context,
             content: error.message,
-            buttonText: "Tentar novamente",
+            buttonText: "Try again",
           );
         }
       },
     );
   }
 
- @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    body: SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: ListView(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 24),
-              Text(
-                'Spend Smarter',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.mediumText36.copyWith(
-                  color: AppColors.greenOne,
-                ),
-              ),
-              Text(
-                'Save More',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.mediumText36.copyWith(
-                  color: AppColors.greenOne,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Image.asset(
-                'assets/images/sign_up_image.png',
-                height: 180, // Limita o tamanho da imagem
-              ),
-              const SizedBox(height: 32),
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    CustomTextFormField(
-                      controller: _nameController,
-                      labelText: "your name",
-                      hintText: "JOHN DOE",
-                      inputFormatters: [UpperCaseTextInputFormatter()],
-                      validator: Validator.validateName,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextFormField(
-                      controller: _emailController,
-                      labelText: "your email",
-                      hintText: "john@email.com",
-                      validator: Validator.validateEmail,
-                    ),
-                    const SizedBox(height: 16),
-                    PasswordFormField(
-                      controller: _passwordController,
-                      labelText: "choose your password",
-                      hintText: "*********",
-                      validator: Validator.validatePassword,
-                      helperText:
-                          "Must have at least 8 characters, 1 capital letter and 1 number.",
-                    ),
-                    const SizedBox(height: 16),
-                    PasswordFormField(
-                      labelText: "confirm your password",
-                      hintText: "*********",
-                      validator: (value) => Validator.validateConfirmPassword(
-                        _passwordController.text,
-                        value,
-                      ),
-                    ),
+          Text(
+            'Spend Smarter',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.mediumText36.copyWith(
+              color: AppColors.greenOne,
+            ),
+          ),
+          Text(
+            'Save More',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.mediumText36.copyWith(
+              color: AppColors.greenOne,
+            ),
+          ),
+          Image.asset(
+            'assets/images/sign_up_image.png',
+          ),
+          Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                CustomTextFormField(
+                  controller: _nameController,
+                  labelText: "your name",
+                  hintText: "JOHN DOE",
+                  inputFormatters: [
+                    UpperCaseTextInputFormatter(),
                   ],
+                  validator: Validator.validateName,
+                ),
+                CustomTextFormField(
+                  controller: _emailController,
+                  labelText: "your email",
+                  hintText: "john@email.com",
+                  validator: Validator.validateEmail,
+                ),
+                PasswordFormField(
+                  controller: _passwordController,
+                  labelText: "choose your password",
+                  hintText: "*********",
+                  validator: Validator.validatePassword,
+                  helperText:
+                      "Must have at least 8 characters, 1 capital letter and 1 number.",
+                ),
+                PasswordFormField(
+                  labelText: "confirm your password",
+                  hintText: "*********",
+                  validator: (value) => Validator.validateConfirmPassword(
+                    _passwordController.text,
+                    value,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 32.0,
+              right: 32.0,
+              top: 16.0,
+              bottom: 4.0,
+            ),
+            child: PrimaryButton(
+              text: 'Sign Up',
+              onPressed: () {
+                final valid = _formKey.currentState != null &&
+                    _formKey.currentState!.validate();
+                if (valid) {
+                  _signUpController.signUp(
+                    name: _nameController.text,
+                    email: _emailController.text,
+                    password: _passwordController.text,
+                  );
+                } else {
+                  log("erro ao logar");
+                }
+              },
+            ),
+          ),
+          MultiTextButton(
+            onPressed: () => Navigator.popAndPushNamed(
+              context,
+              NamedRoute.signIn,
+            ),
+            children: [
+              Text(
+                'Already have account? ',
+                style: AppTextStyles.smallText.copyWith(
+                  color: AppColors.grey,
                 ),
               ),
-              const SizedBox(height: 32),
-              PrimaryButton(
-                text: 'Sign Up',
-                onPressed: () {
-                  final valid = _formKey.currentState?.validate() ?? false;
-                  if (valid) {
-                    _controller.signUp(
-                      name: _nameController.text,
-                      email: _emailController.text,
-                      password: _passwordController.text,
-                    );
-                  } else {
-                    log("Erro ao cadastrar");
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              MultiTextButton(
-                onPressed: () => Navigator.popAndPushNamed(
-                  context,
-                  NamedRoute.signIn,
+              Text(
+                'Sign In ',
+                style: AppTextStyles.smallText.copyWith(
+                  color: AppColors.greenOne,
                 ),
-                children: [
-                  Text(
-                    'Already have account? ',
-                    style: AppTextStyles.smallText.copyWith(
-                      color: AppColors.grey,
-                    ),
-                  ),
-                  Text(
-                    'Sign In ',
-                    style: AppTextStyles.smallText.copyWith(
-                      color: AppColors.greenOne,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
 }
