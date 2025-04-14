@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_3/common/constants/app_text_styles.dart';
-import 'package:tcc_3/common/constants/app_colors.dart';
-import 'package:tcc_3/common/constants/routes.dart';
-import 'package:tcc_3/common/extensions/sizes.dart';
-import 'package:tcc_3/features/splash/splash_controller.dart';
-import 'package:tcc_3/features/splash/splash_state.dart';
-import 'package:tcc_3/locator.dart';
- 
+
+import '../../common/constants/app_colors.dart';
+import '../../common/constants/app_text_styles.dart';
+import '../../common/constants/routes.dart';
+import '../../common/extensions/sizes.dart';
+import '../../common/widgets/custom_circular_progress_indicator.dart';
+import '../../locator.dart';
+import 'splash_controller.dart';
+import 'splash_state.dart';
+
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -20,15 +22,24 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_)=> Sizes.init(context));
 
+    WidgetsBinding.instance.addPostFrameCallback((_) => Sizes.init(context));
 
     _splashController.isUserLogged();
     _splashController.addListener(() {
       if (_splashController.state is AuthenticatedUser) {
-        Navigator.pushReplacementNamed(context, NamedRoute.home);
+        final state = _splashController.state as AuthenticatedUser;
+        if (state.isReady) {
+          Navigator.pushReplacementNamed(
+            context,
+            NamedRoute.home,
+          );
+        }
       } else {
-        Navigator.pushReplacementNamed(context, NamedRoute.initial);
+        Navigator.pushReplacementNamed(
+          context,
+          NamedRoute.initial,
+        );
       }
     });
   }
@@ -54,23 +65,25 @@ class _SplashPageState extends State<SplashPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.monetization_on,
-              size: 100,
-              color: Colors.white,
-            ),
-            const SizedBox(height: 20),
             Text(
-              'JoveMoney',
-              style: AppTextStyles.bigText50.copyWith(
-                color: Colors.white,
-                letterSpacing: 2.0,
-              ),
+              'financy',
+              style: AppTextStyles.bigText50.copyWith(color: AppColors.white),
             ),
-            const SizedBox(height: 20),
-            const CircularProgressIndicator(
-              color: Colors.white,
-            ),
+            AnimatedBuilder(
+                animation: _splashController,
+                builder: (context, _) {
+                  if (_splashController.state is AuthenticatedUser) {
+                    final state = _splashController.state as AuthenticatedUser;
+                    return Text(
+                      state.message,
+                      style: AppTextStyles.smallText13
+                          .copyWith(color: AppColors.white),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
+            const SizedBox(height: 16.0),
+            const CustomCircularProgressIndicator(),
           ],
         ),
       ),

@@ -1,11 +1,11 @@
 import 'package:cloud_functions/cloud_functions.dart';
-
-
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../common/data/data_result.dart';
+import '../common/data/exceptions.dart';
 import '../common/models/user_model.dart';
-import '../data/data_result.dart';
-import '../data/exceptions.dart';
+
+
 import 'auth_service.dart';
 
 class FirebaseAuthService implements AuthService {
@@ -29,17 +29,11 @@ class FirebaseAuthService implements AuthService {
 
       if (result.user != null) {
         return DataResult.success(_createUserModelFromAuthUser(result.user!));
-
-
-
-
       }
 
       return DataResult.failure(const GeneralException());
     } on FirebaseAuthException catch (e) {
       return DataResult.failure(AuthException(code: e.code));
-
-
     }
   }
 
@@ -63,12 +57,6 @@ class FirebaseAuthService implements AuthService {
 
       if (result.user != null) {
         return DataResult.success(_createUserModelFromAuthUser(result.user!));
-
-
-
-
-
-
       }
 
       return DataResult.failure(const GeneralException());
@@ -76,8 +64,6 @@ class FirebaseAuthService implements AuthService {
       return DataResult.failure(AuthException(code: e.code));
     } on FirebaseFunctionsException catch (e) {
       return DataResult.failure(AuthException(code: e.code));
-
-
     }
   }
 
@@ -108,4 +94,4 @@ class FirebaseAuthService implements AuthService {
       id: user.uid,
     );
   }
-  }
+}

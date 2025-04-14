@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_3/common/features/balance_controller.dart';
 import 'package:tcc_3/profile/profile_page.dart';
 import 'package:tcc_3/wallet/wallet_controller.dart';
 import 'package:tcc_3/wallet/wallet_page.dart';
+
 import '../../common/constants/app_colors.dart';
+import '../../common/features/transaction/transaction.dart';
 import '../../common/widgets/custom_bottom_app_bar.dart';
 import '../../locator.dart';
 import '../stats/stats_page.dart';
 import 'home_controller.dart';
 import 'home_page.dart';
-import 'widgets/balance_card/balance_card_widget_controller.dart';
 
 class HomePageView extends StatefulWidget {
   const HomePageView({super.key});
@@ -19,20 +21,21 @@ class HomePageView extends StatefulWidget {
 
 class _HomePageViewState extends State<HomePageView> {
   final homeController = locator.get<HomeController>();
-
-
+  final walletController = locator.get<WalletController>();
+  final balanceController = locator.get<BalanceController>();
 
   @override
   void initState() {
-    homeController.setPageController = PageController();
     super.initState();
+    homeController.setPageController = PageController();
   }
 
   @override
   void dispose() {
     locator.resetLazySingleton<HomeController>();
-    locator.resetLazySingleton<BalanceCardWidgetController>();
+    locator.resetLazySingleton<BalanceController>();
     locator.resetLazySingleton<WalletController>();
+    locator.resetLazySingleton<TransactionController>();
     super.dispose();
   }
 
@@ -53,9 +56,13 @@ class _HomePageViewState extends State<HomePageView> {
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/transaction');
           if (result != null) {
-            homeController.getLatestTransactions();
-            locator.get<BalanceCardWidgetController>().getBalances();
-            locator.get<WalletController>().getAllTransactions();
+            if (homeController.pageController.page == 0) {
+              homeController.getLatestTransactions();
+            }
+            if (homeController.pageController.page == 2) {
+              walletController.getAllTransactions();
+            }
+            balanceController.getBalances();
           }
         },
         child: const Icon(Icons.add),

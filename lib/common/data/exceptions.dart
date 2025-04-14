@@ -67,7 +67,6 @@ class AuthException extends Failure {
       case 'session-expired':
       case 'invalid-jwt':
       case 'invalid-headers':
-
       case 'user-not-authenticated':
         return 'Your session has expired. Please loggin again.';
       case 'email-already-exists':
@@ -95,10 +94,25 @@ class SecureStorageException extends Failure {
 }
 
 class CacheException extends Failure {
-  const CacheException();
+  const CacheException({required this.code});
+
+  final String code;
 
   @override
-  String get message => 'An error has occurred while fetching Local Cache.';
+  String get message {
+    switch (code) {
+      case 'write':
+        return 'An error has occurred while writing data into local cache.';
+      case 'read':
+        return 'An error has occurred while reading data into local cache.';
+      case 'delete':
+        return 'An error has occurred while delete data from local cache.';
+      case 'update':
+        return 'An error has occurred while updating data from local cache.';
+      default:
+        return 'An error has occurred while accessing local cache.';
+    }
+  }
 }
 
 //System Exceptions
@@ -116,6 +130,21 @@ class ConnectionException extends Failure {
         return 'It was not possible to connect to the remote server. Please check you connection and try again.';
       default:
         return 'An internal error ocurred. Please try again later.';
+    }
+  }
+}
+
+class SyncException extends Failure {
+  const SyncException({required this.code});
+
+  final String code;
+  @override
+  String get message {
+    switch (code) {
+      case 'error':
+        return 'error while syncing';
+      default:
+        return 'unkown error';
     }
   }
 }

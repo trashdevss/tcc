@@ -2,7 +2,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tcc_3/common/models/user_model.dart';
-import 'package:tcc_3/data/data_result.dart';
+import 'package:tcc_3/common/data/data_result.dart';
 import 'package:tcc_3/features/sign_up/sign_up_controller.dart';
 import 'package:tcc_3/features/sign_up/sign_up_state.dart';
 

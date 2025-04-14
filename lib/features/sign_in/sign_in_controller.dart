@@ -1,17 +1,18 @@
+import '../../services/services.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../services/auth_service.dart';
-import '../../services/secure_storage.dart';
 import 'sign_in_state.dart';
 
 class SignInController extends ChangeNotifier {
   SignInController({
     required this.authService,
     required this.secureStorageService,
+    required this.syncService,
   });
 
   final AuthService authService;
   final SecureStorageService secureStorageService;
+  final SyncService syncService;
 
   SignInState _state = SignInStateInitial();
 
@@ -41,12 +42,10 @@ class SignInController extends ChangeNotifier {
           value: data.toJson(),
         );
 
+        await syncService.syncFromServer();
+
         _changeState(SignInStateSuccess());
       },
     );
-
-
-
-
   }
 }
