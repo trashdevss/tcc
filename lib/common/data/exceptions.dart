@@ -115,6 +115,13 @@ class CacheException extends Failure {
   }
 }
 
+class UserDataException extends Failure {
+  const UserDataException();
+
+  @override
+  String get message => 'User data not found. Please login again.';
+}
+
 //System Exceptions
 class ConnectionException extends Failure {
   const ConnectionException({
@@ -142,7 +149,7 @@ class SyncException extends Failure {
   String get message {
     switch (code) {
       case 'error':
-        return 'error while syncing';
+        return 'Error while syncing. Please restart the app or relogin.';
       default:
         return 'unkown error';
     }

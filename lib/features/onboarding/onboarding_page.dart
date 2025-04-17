@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_3/common/constants/keys.dart';
-import 'package:tcc_3/common/widgets/multi_text_button.dart';
-import 'package:tcc_3/common/widgets/primary_button.dart';
- import '../../common/constants/constants.dart';
+
+import '../../common/constants/constants.dart';
+import '../../common/widgets/widgets.dart';
 
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
@@ -20,14 +19,14 @@ class OnboardingPage extends StatelessWidget {
             ),
           ),
           Text(
-            'Gaste de Forma inteligente',
+            'Spend Smarter',
             textAlign: TextAlign.center,
             style: AppTextStyles.mediumText36.copyWith(
               color: AppColors.greenOne,
             ),
           ),
           Text(
-            'Economize Mais',
+            'Save More',
             textAlign: TextAlign.center,
             style: AppTextStyles.mediumText36.copyWith(
               color: AppColors.greenOne,
@@ -42,7 +41,7 @@ class OnboardingPage extends StatelessWidget {
             ),
             child: PrimaryButton(
               key: Keys.onboardingGetStartedButton,
-              text: 'Comece Ja',
+              text: 'Get Started',
               onPressed: () {
                 Navigator.pushNamed(
                   context,
@@ -56,13 +55,13 @@ class OnboardingPage extends StatelessWidget {
             onPressed: () => Navigator.pushNamed(context, NamedRoute.signIn),
             children: [
               Text(
-                'Ja tem uma conta ? ',
+                'Already have account? ',
                 style: AppTextStyles.smallText.copyWith(
                   color: AppColors.grey,
                 ),
               ),
               Text(
-                'Logue-se Agora ',
+                'Sign In ',
                 style: AppTextStyles.smallText.copyWith(
                   color: AppColors.greenOne,
                 ),

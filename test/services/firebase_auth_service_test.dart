@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tcc_3/common/data/data_result.dart';
+import 'package:tcc_3/common/data/exceptions.dart';
 
 import '../mock/mock_classes.dart';
 
@@ -33,7 +34,7 @@ void main() {
         );
 
         expect(
-          result,
+          result.data,
           user,
         );
       });
@@ -79,7 +80,7 @@ void main() {
       );
 
       expect(
-        result,
+        result.data,
         user,
       );
     });
@@ -90,17 +91,16 @@ void main() {
           email: 'user@email.com',
           password: 'user@123',
         ),
-      ).thenThrow(
-        Exception(),
+      ).thenAnswer((_) async => DataResult.failure(const GeneralException()));
+
+      final result = await mockFirebaseAuthService.signIn(
+        email: 'user@email.com',
+        password: 'user@123',
       );
 
-      expect(
-        () => mockFirebaseAuthService.signIn(
-          email: 'user@email.com',
-          password: 'user@123',
-        ),
-        // throwsA(isInstanceOf<Exception>()),
-        throwsException,
+      result.fold(
+        (error) => expect(error, isA<Exception>()),
+        (data) => expect(data, null),
       );
     });
   });

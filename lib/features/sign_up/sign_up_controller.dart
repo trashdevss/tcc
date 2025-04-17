@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../services/auth_service.dart';
-import '../../services/secure_storage.dart';
+import '../../services/services.dart';
 import 'sign_up_state.dart';
 
 class SignUpController extends ChangeNotifier {
@@ -46,9 +45,5 @@ class SignUpController extends ChangeNotifier {
         _changeState(SignUpStateSuccess());
       },
     );
-
-
-
-
   }
 }
