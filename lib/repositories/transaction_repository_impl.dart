@@ -137,15 +137,8 @@ class TransactionRepositoryImpl implements TransactionRepository {
     try {
       final balanceMap =
           await databaseService.read(path: TransactionRepository.balancesPath);
-            final balanceList = balanceMap['data'] as List;
-if (balanceList.isEmpty) {
-  return DataResult.failure(
-    const CacheException(code: 'empty_balance',),
-  );
-}
 
-final current = BalancesModel.fromMap(balanceList.first);
-
+      final current = BalancesModel.fromMap((balanceMap['data'] as List).first);
 
       double newTotalBalance = current.totalBalance;
       double newTotalIncome = current.totalIncome;
@@ -184,7 +177,7 @@ final current = BalancesModel.fromMap(balanceList.first);
       );
 
       if (!(updateBalanceResponse['data'] as bool)) {
-        return DataResult.failure(const CacheException(code: 'update',));
+        return DataResult.failure(const CacheException(code: 'update'));
       }
 
       return DataResult.success(

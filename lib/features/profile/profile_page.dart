@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_3/common/extensions/extensions.dart';
 
 import '../../common/constants/constants.dart';
 import '../../common/widgets/widgets.dart';
@@ -55,49 +56,148 @@ class _ProfilePageState extends State<ProfilePage> with CustomModalSheetMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text("Profile"),
-            AnimatedBuilder(
-              animation: _profileController,
-              builder: (context, child) {
-                if (_profileController.state is ProfileStateSuccess) {
-                  final user =
-                      (_profileController.state as ProfileStateSuccess).user;
-                  return Column(
-                    children: [
-                      Text(user.name!),
-                      Text(user.email!),
-                    ],
-                  );
-                }
-                return const SizedBox.shrink();
-              },
+      body: Stack(
+        children: [
+          const AppHeader(
+            title: 'Profile',
+          ),
+          Positioned(
+            top: 210.h,
+            left: 0,
+            right: 0,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  minRadius: 60.h,
+                  child: const Icon(Icons.person),
+                ),
+                SizedBox(height: 20.h),
+                AnimatedBuilder(
+                  animation: _profileController,
+                  builder: (context, child) {
+                    if (_profileController.state is ProfileStateSuccess) {
+                      final user =
+                          (_profileController.state as ProfileStateSuccess)
+                              .user;
+                      return Column(
+                        children: [
+                          Text(
+                            user.name!,
+                            style: AppTextStyles.mediumText20,
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            user.email!,
+                            style: AppTextStyles.smallText.apply(
+                              color: AppColors.green,
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
             ),
-            TextButton(
-              key: Keys.profilePagelogoutButton,
-              onPressed: () async {
-  final syncService = locator.get<SyncService>();
+          ),
+          Positioned(
+            top: 450.h,
+            left: 32,
+            right: 32,
+            bottom: 0,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
 
-  // 🔄 Primeiro sincroniza os dados com o servidor
-  await syncService.syncToServer();
+                children: [
+                  TextButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.person,
+                      color: AppColors.green,
+                    ),
+                    label: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Change name',
+                        style: AppTextStyles.mediumText16w500
+                            .apply(color: AppColors.green),
+                        textAlign: TextAlign.start,
 
-  // ✅ Depois limpa os dados locais com segurança
-  await locator.get<AuthService>().signOut();
-  await const SecureStorageService().deleteAll();
-  await locator.get<DatabaseService>().deleteDB;
 
-  if (mounted) {
-    Navigator.popUntil(context, ModalRoute.withName('/'));
-  }
-},
 
-              child: const Text("Logout"),
-            )
-          ],
-        ),
+
+
+
+
+                      ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.lock_person_rounded,
+                      color: AppColors.green,
+                    ),
+                    label: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Change password',
+                        style: AppTextStyles.mediumText16w500
+                            .apply(color: AppColors.green),
+                        textAlign: TextAlign.start,
+
+
+
+
+
+
+
+
+                      ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () async {
+
+                      await locator.get<AuthService>().signOut();
+                      await locator.get<SecureStorageService>().deleteAll();
+                      await locator.get<DatabaseService>().deleteDB;
+                      if (!mounted) return;
+
+                      Navigator.popUntil(
+                        context,
+                        ModalRoute.withName(NamedRoute.initial),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.logout_outlined,
+                      color: AppColors.green,
+                    ),
+                    label: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Logout',
+                        style: AppTextStyles.mediumText16w500
+                            .apply(color: AppColors.green),
+                        textAlign: TextAlign.start,
+
+
+
+
+
+
+
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

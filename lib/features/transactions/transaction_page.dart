@@ -3,7 +3,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:tcc_3/common/features/balance_controller.dart';
-
 import '../../common/constants/constants.dart';
 import '../../common/extensions/extensions.dart';
 import '../../common/features/transaction/transaction.dart';
@@ -127,6 +126,7 @@ class _TransactionPageState extends State<TransactionPage>
       body: Stack(
         children: [
           AppHeader(
+            preffixOption: true,
             title: widget.transaction != null
                 ? 'Edit Transaction'
                 : 'Add Transaction',
