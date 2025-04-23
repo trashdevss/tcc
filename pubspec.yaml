@@ -52,6 +52,7 @@ dependencies:
   integration_test:
     sdk: flutter
   foundation: ^0.0.5
+  dotenv: ^4.2.0
 
 dev_dependencies:
   flutter_test:

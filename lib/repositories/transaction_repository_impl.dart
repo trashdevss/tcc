@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../common/data/data.dart';
+import '../common/extensions/extensions.dart';
 import '../common/models/models.dart';
 import '../services/services.dart';
 import 'transaction_repository.dart';
@@ -37,29 +38,29 @@ class TransactionRepositoryImpl implements TransactionRepository {
   }
 
   @override
-  Future<DataResult<List<TransactionModel>>> getTransactions({
-    int? limit,
-    int? offset,
-    bool latest = false,
-  }) async {
-    final params = {
-      'limit': limit,
-      'offset': offset,
-      'skip_status': SyncStatus.delete.name,
-    };
+  Future<DataResult<List<TransactionModel>>> getLatestTransactions() async {
+
+
+
+
+
+
+
+
+
 
     try {
       final cachedTransactionsResponse = await databaseService.read(
         path: TransactionRepository.transactionsPath,
-        params: latest
-            ? {
-                ...params,
-                'order_by': 'date desc',
-              }
-            : {
-                ...params,
-                'order_by': 'date asc',
-              },
+        params: {
+          'limit': 5,
+          'skip_status': SyncStatus.delete.name,
+          'order_by': 'date desc',
+        },
+
+
+
+
       );
 
       final parsedcachedTransactions =
@@ -77,19 +78,26 @@ class TransactionRepositoryImpl implements TransactionRepository {
     }
   }
 
-  @override
-  Future<DataResult<BalancesModel>> getBalances() async {
-    try {
-      final balanceResponse =
-          await databaseService.read(path: TransactionRepository.balancesPath);
-      BalancesModel cachedBalances =
-          BalancesModel.fromMap((balanceResponse['data'] as List).first);
+ @override
+Future<DataResult<BalancesModel>> getBalances() async {
+  try {
+    final balanceResponse =
+        await databaseService.read(path: TransactionRepository.balancesPath);
 
-      return DataResult.success(cachedBalances);
-    } on Failure catch (e) {
-      return DataResult.failure(e);
+    final data = balanceResponse['data'] as List;
+
+    if (data.isEmpty) {
+      return DataResult.failure(const CacheException(code: 'no_data'));
     }
+
+    BalancesModel cachedBalances = BalancesModel.fromMap(data.first);
+
+    return DataResult.success(cachedBalances);
+  } on Failure catch (e) {
+    return DataResult.failure(e);
   }
+}
+
 
   @override
   Future<DataResult<bool>> updateTransaction(
@@ -183,6 +191,37 @@ class TransactionRepositoryImpl implements TransactionRepository {
       return DataResult.success(
         BalancesModel.fromMap(updatedBalance),
       );
+    } on Failure catch (e) {
+      return DataResult.failure(e);
+    }
+  }
+
+  @override
+  Future<DataResult<List<TransactionModel>>> getTransactionsByDateRange({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    try {
+      final cachedTransactionsResponse = await databaseService.read(
+        path: TransactionRepository.transactionsPath,
+        params: {
+          'skip_status': SyncStatus.delete.name,
+          'order_by': 'date asc',
+          'start_date': startDate.yMd,
+          'end_date': endDate.yMd,
+        },
+      );
+
+      final parsedcachedTransactions =
+          List.from(cachedTransactionsResponse['data']);
+
+      final cachedTransactions = parsedcachedTransactions
+          .map((e) => TransactionModel.fromMap(e))
+          .toList();
+
+      // return DataResult.failure(const GeneralException());
+
+      return DataResult.success(cachedTransactions);
     } on Failure catch (e) {
       return DataResult.failure(e);
     }

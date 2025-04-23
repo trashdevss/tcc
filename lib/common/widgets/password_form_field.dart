@@ -1,5 +1,5 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:tcc_3/common/constants/app_colors.dart';
 import 'package:tcc_3/common/widgets/custom_text_form_field.dart';
@@ -17,7 +17,7 @@ class PasswordFormField extends StatefulWidget {
   final VoidCallback? onEditingComplete;
 
   const PasswordFormField({
-    super.key,
+    Key? key,
     this.controller,
     this.padding,
     this.hintText,
@@ -28,7 +28,7 @@ class PasswordFormField extends StatefulWidget {
     this.onTap,
     this.onTapOutside,
     this.onEditingComplete,
-  });
+  }) : super(key: key);
 
   @override
   State<PasswordFormField> createState() => _PasswordFormFieldState();
@@ -41,10 +41,7 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
   Widget build(BuildContext context) {
     return CustomTextFormField(
       onTap: widget.onTap,
-      onEditingComplete: widget.onEditingComplete ??
-          () {
-            FocusScope.of(context).nextFocus();
-          },
+      onEditingComplete: widget.onEditingComplete,
       focusNode: widget.focusNode,
       onTapOutside: widget.onTapOutside ??
           (_) {
@@ -56,6 +53,7 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
       validator: widget.validator,
       obscureText: isHidden,
       controller: widget.controller,
+      padding: widget.padding,
       hintText: widget.hintText,
       labelText: widget.labelText,
       suffixIcon: InkWell(
@@ -64,7 +62,7 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
           log("pressed");
           setState(() {
             isHidden = !isHidden;
-          }); 
+          });
         },
         child: Icon(
           isHidden ? Icons.visibility : Icons.visibility_off,

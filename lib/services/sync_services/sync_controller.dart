@@ -28,13 +28,20 @@ class SyncController extends ChangeNotifier {
   }
 
   Future<void> syncToServer() async {
-    _changeState(UploadingDataToServerState());
+  _changeState(UploadingDataToServerState());
 
-    final result = await syncService.syncToServer();
+  final result = await syncService.syncToServer();
 
-    result.fold(
-      (error) => _changeState(UploadDataToServerError(error.message)),
-      (_) => _changeState(UploadedDataToServer()),
-    );
-  }
+  result.fold(
+    (error) {
+      // Logar o erro de forma mais detalhada
+      print('Erro ao sincronizar com o servidor: ${error.message}');
+      _changeState(UploadDataToServerError(error.message));
+    },
+    (_) {
+      _changeState(UploadedDataToServer());
+    },
+  );
+}
+
 }

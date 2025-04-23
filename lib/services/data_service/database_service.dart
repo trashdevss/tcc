@@ -9,7 +9,7 @@ import 'data_service.dart';
 class DatabaseService implements DataService<Map<String, dynamic>> {
   DatabaseService();
 
-  static const _name = 'financy_app.db';
+  static const _name = 'tcc_3.db';
   Database? _db;
 
   Database get db => _db!;
@@ -88,7 +88,7 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
         }
       }
     } catch (e) {
-      throw const CacheException(code: 'write', );
+      throw const CacheException(code: 'write');
     }
   }
 
@@ -108,19 +108,36 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
         );
         return {'data': result};
       } else {
+        String whereClause = '';
+        List<dynamic> whereArgs = [];
+
+        if (params.containsKey('start_date') &&
+            params.containsKey('end_date')) {
+          whereClause = 'date BETWEEN ? AND ?';
+          whereArgs = [params['start_date'], params['end_date']];
+        }
+
+        if (params.containsKey('skip_status')) {
+          if (whereClause.isNotEmpty) {
+            whereClause += ' AND ';
+          }
+          whereClause += 'sync_status != ?';
+          whereArgs.add(params['skip_status']);
+        }
+
         final result = await db.query(
           path,
           limit: params['limit'],
           offset: params['offset'],
           orderBy: params['order_by'],
-          where: params.containsKey('skip_status') ? 'sync_status != ?' : null,
-          whereArgs:
-              params.containsKey('skip_status') ? [params['skip_status']] : [],
+          where: whereClause.isEmpty ? null : whereClause,
+          whereArgs: whereArgs.isEmpty ? null : whereArgs,
+
         );
         return {'data': result};
       }
     } catch (e) {
-      throw const CacheException(code: 'read', );
+      throw const CacheException(code: 'read');
     }
   }
 
@@ -147,7 +164,7 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
         return {'data': result != 0};
       }
     } catch (e) {
-      throw const CacheException(code: 'update', );
+      throw const CacheException(code: 'update');
     }
   }
 
@@ -173,7 +190,7 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
         return {'data': result != 0};
       }
     } catch (e) {
-      throw const CacheException(code: 'delete', );
+      throw const CacheException(code: 'delete');
     }
   }
 }

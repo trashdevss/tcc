@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_3/common/features/balance_controller.dart';
-import 'package:tcc_3/features/wallet/wallet_controller.dart';
-import 'package:tcc_3/features/wallet/wallet_page.dart';
-import 'package:tcc_3/features/profile/profile_page.dart';
 
 import '../../common/constants/constants.dart';
+import '../../common/extensions/extensions.dart';
 import '../../common/features/transaction/transaction.dart';
 import '../../common/widgets/widgets.dart';
 import '../../locator.dart';
+import '../profile/profile.dart';
 import '../stats/stats_page.dart';
-
+import '../wallet/wallet.dart';
 import 'home_controller.dart';
 import 'home_page.dart';
 
@@ -61,7 +60,7 @@ class _HomePageViewState extends State<HomePageView> {
               homeController.getLatestTransactions();
             }
             if (homeController.pageController.page == 2) {
-              walletController.getAllTransactions();
+              walletController.getTransactionsByDateRange();
             }
             balanceController.getBalances();
           }
@@ -75,39 +74,39 @@ class _HomePageViewState extends State<HomePageView> {
         children: [
           CustomBottomAppBarItem(
             key: Keys.homePageBottomAppBarItem,
-            label: 'home',
+            label: BottomAppBarItem.home.name,
             primaryIcon: Icons.home,
             secondaryIcon: Icons.home_outlined,
-            onPressed: () => homeController.pageController.jumpToPage(
-              0,
+            onPressed: () => homeController.pageController.navigateTo(
+              BottomAppBarItem.home,
             ),
           ),
           CustomBottomAppBarItem(
             key: Keys.statsPageBottomAppBarItem,
-            label: 'stats',
+            label: BottomAppBarItem.stats.name,
             primaryIcon: Icons.analytics,
             secondaryIcon: Icons.analytics_outlined,
-            onPressed: () => homeController.pageController.jumpToPage(
-              1,
+            onPressed: () => homeController.pageController.navigateTo(
+              BottomAppBarItem.stats,
             ),
           ),
           CustomBottomAppBarItem.empty(),
           CustomBottomAppBarItem(
             key: Keys.walletPageBottomAppBarItem,
-            label: 'wallet',
+            label: BottomAppBarItem.wallet.name,
             primaryIcon: Icons.account_balance_wallet,
             secondaryIcon: Icons.account_balance_wallet_outlined,
-            onPressed: () => homeController.pageController.jumpToPage(
-              2,
+            onPressed: () => homeController.pageController.navigateTo(
+              BottomAppBarItem.wallet,
             ),
           ),
           CustomBottomAppBarItem(
             key: Keys.profilePageBottomAppBarItem,
-            label: 'profile',
+            label: BottomAppBarItem.profile.name,
             primaryIcon: Icons.person,
             secondaryIcon: Icons.person_outline,
-            onPressed: () => homeController.pageController.jumpToPage(
-              3,
+            onPressed: () => homeController.pageController.navigateTo(
+              BottomAppBarItem.profile,
             ),
           ),
         ],

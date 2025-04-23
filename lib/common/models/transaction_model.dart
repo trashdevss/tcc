@@ -1,8 +1,5 @@
 import 'dart:convert';
-
-
 import 'package:uuid/uuid.dart';
-
 import '../extensions/extensions.dart';
 
 enum SyncStatus {
@@ -36,30 +33,30 @@ class TransactionModel {
   final String? userId;
   final SyncStatus? syncStatus;
 
-  Map<String, dynamic> toMap() {
+  /// Usado para enviar dados ao Hasura nas mutations
+  Map<String, dynamic> toGraphQLInput() {
     return <String, dynamic>{
-      'description': description,
-      'category': category,
-      'value': value,
-      'date': DateTime.fromMillisecondsSinceEpoch(date).formatISOTime,
-      'created_at':
-          DateTime.fromMillisecondsSinceEpoch(createdAt).formatISOTime,
-      'status': status,
       'id': id ?? const Uuid().v4(),
-      'user_id': userId,
-    };
-  }
-
-  Map<String, dynamic> toDatabase() {
-    return <String, dynamic>{
       'description': description,
       'category': category,
       'value': value,
       'date': DateTime.fromMillisecondsSinceEpoch(date).toIso8601String(),
-      'created_at':
-          DateTime.fromMillisecondsSinceEpoch(createdAt).toIso8601String(),
-      'status': status.toInt(),
+      'created_at': DateTime.fromMillisecondsSinceEpoch(createdAt).toIso8601String(),
+      'status': status,
+      'user_id': userId ?? '',
+    };
+  }
+
+  /// Usado para persistência no banco de dados local
+  Map<String, dynamic> toDatabase() {
+    return <String, dynamic>{
       'id': id ?? const Uuid().v4(),
+      'description': description,
+      'category': category,
+      'value': value,
+      'date': DateTime.fromMillisecondsSinceEpoch(date).toIso8601String(),
+      'created_at': DateTime.fromMillisecondsSinceEpoch(createdAt).toIso8601String(),
+      'status': status.toInt(),
       'user_id': userId,
       'sync_status': syncStatus!.name,
     };
@@ -75,8 +72,7 @@ class TransactionModel {
       category: map['category'] as String,
       value: double.tryParse(map['value'].toString()) ?? 0,
       date: DateTime.parse(map['date'] as String).millisecondsSinceEpoch,
-      createdAt:
-          DateTime.parse(map['created_at'] as String).millisecondsSinceEpoch,
+      createdAt: DateTime.parse(map['created_at'] as String).millisecondsSinceEpoch,
       status: map['status'] is int ? parsedStatus : map['status'] as bool,
       id: map['id'] as String?,
       userId: map['user_id'] as String?,
@@ -87,10 +83,34 @@ class TransactionModel {
     );
   }
 
-  String toJson() => json.encode(toMap());
+  String toJson() => json.encode(toGraphQLInput());
 
   factory TransactionModel.fromJson(String source) =>
       TransactionModel.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  TransactionModel copyWith({
+    String? description,
+    String? category,
+    double? value,
+    int? date,
+    bool? status,
+    int? createdAt,
+    String? id,
+    String? userId,
+    SyncStatus? syncStatus,
+  }) {
+    return TransactionModel(
+      description: description ?? this.description,
+      category: category ?? this.category,
+      value: value ?? this.value,
+      date: date ?? this.date,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      id: id ?? this.id ?? const Uuid().v4(),
+      userId: userId ?? this.userId,
+      syncStatus: syncStatus ?? this.syncStatus,
+    );
+  }
 
   @override
   bool operator ==(covariant TransactionModel other) {
@@ -118,29 +138,5 @@ class TransactionModel {
         id.hashCode ^
         userId.hashCode ^
         syncStatus.hashCode;
-  }
-
-  TransactionModel copyWith({
-    String? description,
-    String? category,
-    double? value,
-    int? date,
-    bool? status,
-    int? createdAt,
-    String? id,
-    String? userId,
-    SyncStatus? syncStatus,
-  }) {
-    return TransactionModel(
-      description: description ?? this.description,
-      category: category ?? this.category,
-      value: value ?? this.value,
-      date: date ?? this.date,
-      status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
-      id: id ?? this.id ?? const Uuid().v4(),
-      userId: userId ?? this.userId,
-      syncStatus: syncStatus ?? this.syncStatus,
-    );
   }
 }

@@ -1,4 +1,4 @@
-import 'package:tcc_3/common/models/user_model.dart';
+import '../../common/models/models.dart';
 
 abstract class ProfileState {}
 
@@ -7,9 +7,9 @@ class ProfileStateInitial extends ProfileState {}
 class ProfileStateLoading extends ProfileState {}
 
 class ProfileStateSuccess extends ProfileState {
-  ProfileStateSuccess({required this.user});
+  ProfileStateSuccess({this.user});
 
-  final UserModel user;
+  final UserModel? user;
 }
 
 class ProfileStateError extends ProfileState {

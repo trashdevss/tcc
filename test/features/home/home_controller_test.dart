@@ -11,6 +11,7 @@ import '../../mock/mock_classes.dart';
 void main() {
   late MockTransactionRepository mockTransactionRepository;
   late MockSyncService mockSyncService;
+  late MockUserDataService mockUserDataService;
 
   late HomeController sut;
   late List<TransactionModel> transactions;
@@ -18,10 +19,11 @@ void main() {
   setUp(() {
     mockSyncService = MockSyncService();
     mockTransactionRepository = MockTransactionRepository();
+    mockUserDataService = MockUserDataService();
 
     sut = HomeController(
       transactionRepository: mockTransactionRepository,
-
+      userDataService: mockUserDataService,
     );
 
     transactions = [
@@ -45,19 +47,14 @@ void main() {
 
   group('Tests Home Controller State', () {
     test('''
-
 \nGiven: that the initial state is HomeStateInitial
 When: getLatestTransactions is called and returns transactions
 Then: HomeState should be HomeStateSuccess
 ''', () async {
-
       expect(sut.state, isInstanceOf<HomeStateInitial>());
       expect(sut.transactions, isEmpty);
 
-      when(() => mockTransactionRepository.getTransactions(
-            limit: 5,
-            latest: true,
-          )).thenAnswer(
+      when(() => mockTransactionRepository.getLatestTransactions()).thenAnswer(
         (_) async => DataResult.success(transactions),
       );
 
@@ -69,19 +66,14 @@ Then: HomeState should be HomeStateSuccess
     });
 
     test('''
-
 \nGiven: that the initial state is HomeStateInitial
 When: getLatestTransactions is called and returns failure
 Then: HomeState should be HomeStateError
 ''', () async {
-
       expect(sut.state, isInstanceOf<HomeStateInitial>());
       expect(sut.transactions, isEmpty);
 
-      when(() => mockTransactionRepository.getTransactions(
-            limit: 5,
-            latest: true,
-          )).thenAnswer(
+      when(() => mockTransactionRepository.getLatestTransactions()).thenAnswer(
         (_) async => DataResult.failure(const GeneralException()),
       );
 

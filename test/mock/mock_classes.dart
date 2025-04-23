@@ -1,5 +1,4 @@
-
-
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tcc_3/common/models/user_model.dart';
@@ -46,3 +45,7 @@ class FakeUser extends Fake implements User {
   @override
   String get email => 'user@email.com';
 }
+
+// Mock FirebaseFunctions
+
+class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}

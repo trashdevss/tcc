@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:tcc_3/common/features/balance_controller.dart';
 import 'package:tcc_3/common/features/balance_state.dart';
 
@@ -18,20 +19,25 @@ class WalletPage extends StatefulWidget {
 }
 
 class _WalletPageState extends State<WalletPage>
-    with SingleTickerProviderStateMixin, CustomModalSheetMixin {
+    with TickerProviderStateMixin, CustomModalSheetMixin {
   final _balanceController = locator.get<BalanceController>();
   final _walletController = locator.get<WalletController>();
-  late final TabController _tabController;
+  late final TabController _optionsTabController;
+  late final TabController _monthsTabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
+    _optionsTabController = TabController(
       length: 2,
       vsync: this,
     );
+    _monthsTabController = TabController(
+      length: 1,
+      vsync: this,
+    );
 
-    _walletController.getAllTransactions();
+    _walletController.getTransactionsByDateRange();
     _balanceController.getBalances();
 
     _walletController.addListener(_handleWalletStateChange);
@@ -39,7 +45,8 @@ class _WalletPageState extends State<WalletPage>
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _optionsTabController.dispose();
+    _monthsTabController.dispose();
     _walletController.removeListener(_handleWalletStateChange);
     super.dispose();
   }
@@ -57,27 +64,49 @@ class _WalletPageState extends State<WalletPage>
           isDismissible: false,
           onPressed: () => Navigator.pushNamedAndRemoveUntil(
             context,
-            NamedRoute.signIn,
-            ModalRoute.withName(NamedRoute.initial),
+            NamedRoute.initial,
+            (route) => false,
           ),
         );
         break;
     }
   }
 
+  void _goToPreviousMonth() {
+    final selectedDate = _walletController.selectedDate;
+
+    _walletController.changeSelectedDate(
+        DateTime(selectedDate.year, selectedDate.month - 1));
+    _monthsTabController.index = 0;
+    _walletController.getTransactionsByDateRange();
+  }
+
+  void _goToNextMonth() {
+    final selectedDate = _walletController.selectedDate;
+
+    _walletController.changeSelectedDate(
+        DateTime(selectedDate.year, selectedDate.month + 1));
+    _monthsTabController.index = 0;
+    _walletController.getTransactionsByDateRange();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        locator.get<HomeController>().pageController.jumpToPage(0);
-        return false;
-      },
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (_) => locator
+          .get<HomeController>()
+          .pageController
+          .navigateTo(BottomAppBarItem.home),
       child: Stack(
         children: [
           AppHeader(
             title: 'Wallet',
             onPressed: () {
-              locator.get<HomeController>().pageController.jumpToPage(0);
+              locator
+                  .get<HomeController>()
+                  .pageController
+                  .navigateTo(BottomAppBarItem.home);
             },
           ),
           Positioned(
@@ -114,58 +143,95 @@ class _WalletPageState extends State<WalletPage>
                           );
                         }),
                     const SizedBox(height: 24.0),
+                    //TODO: finish transaction / upcoming bills tabs
+
+                    // StatefulBuilder(
+                    //   builder: (context, setState) {
+                    //     return TabBar(
+                    //       labelPadding: EdgeInsets.zero,
+                    //       controller: _optionsTabController,
+                    //       onTap: (_) {
+                    //         if (_optionsTabController.indexIsChanging) {
+                    //           setState(() {});
+                    //         }
+                    //       },
+                    //       tabs: [
+                    //         Tab(
+                    //           child: Container(
+                    //             alignment: Alignment.center,
+                    //             decoration: BoxDecoration(
+                    //               color: _optionsTabController.index == 0
+                    //                   ? AppColors.iceWhite
+                    //                   : AppColors.white,
+                    //               borderRadius: const BorderRadius.all(
+                    //                 Radius.circular(24.0),
+                    //               ),
+                    //             ),
+                    //             child: Text(
+                    //               'Transactions',
+                    //               style: AppTextStyles.mediumText16w500
+                    //                   .apply(color: AppColors.darkGrey),
+                    //             ),
+                    //           ),
+                    //         ),
+                    //         Tab(
+                    //           child: Container(
+                    //             alignment: Alignment.center,
+                    //             decoration: BoxDecoration(
+                    //               color: _optionsTabController.index == 1
+                    //                   ? AppColors.iceWhite
+                    //                   : AppColors.white,
+                    //               borderRadius: const BorderRadius.all(
+                    //                 Radius.circular(24.0),
+                    //               ),
+                    //             ),
+                    //             child: Text(
+                    //               'Upcoming Bills',
+                    //               style: AppTextStyles.mediumText16w500
+                    //                   .apply(color: AppColors.darkGrey),
+                    //             ),
+                    //           ),
+                    //         ),
+                    //       ],
+                    //     );
+                    //   },
+                    // ),
+                    // const SizedBox(height: 32.0),
                     StatefulBuilder(
                       builder: (context, setState) {
-                        return TabBar(
-                          labelPadding: EdgeInsets.zero,
-                          controller: _tabController,
-                          onTap: (_) {
-                            if (_tabController.indexIsChanging) {
-                              setState(() {});
-                            }
-                          },
-                          tabs: [
-                            Tab(
-                              child: Container(
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: _tabController.index == 0
-                                      ? AppColors.iceWhite
-                                      : AppColors.white,
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(24.0),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Transactions',
-                                  style: AppTextStyles.mediumText16w500
-                                      .apply(color: AppColors.darkGrey),
-                                ),
-                              ),
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              icon:
+                                  const Icon(Icons.arrow_back_ios_new_rounded),
+                              color: AppColors.green,
+                              onPressed: () {
+                                setState(_goToPreviousMonth);
+                              },
                             ),
-                            Tab(
-                              child: Container(
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: _tabController.index == 1
-                                      ? AppColors.iceWhite
-                                      : AppColors.white,
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(24.0),
-                                  ),
+                            TabBar(
+                              labelColor: AppColors.green,
+                              labelStyle: AppTextStyles.mediumText16w600,
+                              controller: _monthsTabController,
+                              isScrollable: true,
+                              tabs: [
+                                Tab(
+                                  text: DateFormat('MMMM yyyy')
+                                      .format(_walletController.selectedDate),
                                 ),
-                                child: Text(
-                                  'Upcoming Bills',
-                                  style: AppTextStyles.mediumText16w500
-                                      .apply(color: AppColors.darkGrey),
-                                ),
-                              ),
+                              ],
+                            ),
+                            IconButton(
+                              icon:
+                                  const Icon(Icons.arrow_forward_ios_outlined),
+                              color: AppColors.green,
+                              onPressed: () => setState(_goToNextMonth),
                             ),
                           ],
                         );
                       },
                     ),
-                    const SizedBox(height: 32.0),
                     Expanded(
                       child: AnimatedBuilder(
                         animation: _walletController,
@@ -180,21 +246,20 @@ class _WalletPageState extends State<WalletPage>
                               child: Text('An error has occurred'),
                             );
                           }
-                          if (_walletController.state is WalletStateSuccess &&
-                              _walletController.transactions.isNotEmpty) {
-                            return TransactionListView.withCalendar(
+                          if (_walletController.state is WalletStateSuccess) {
+                            return TransactionListView(
                               transactionList: _walletController.transactions,
-                              itemCount: _walletController.transactions.length,
                               onChange: () {
-                                _walletController.getAllTransactions();
+                                _walletController.getTransactionsByDateRange();
                                 _balanceController.getBalances();
                               },
+                              selectedDate: _walletController.selectedDate,
                             );
                           }
 
                           return const Center(
-                            child:
-                                Text('There are no transactions at this time.'),
+                            child: Text(
+                                'There are no transactions registered here.'),
                           );
                         },
                       ),

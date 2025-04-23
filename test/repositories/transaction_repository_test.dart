@@ -120,7 +120,7 @@ void main() {
         when(() => mockSyncService.saveLocalChanges(
               path: TransactionRepository.transactionsPath,
               params: any(named: 'params'),
-            )).thenThrow(const CacheException(code: 'write', ));
+            )).thenThrow(const CacheException(code: 'write'));
 
         final result = await transactionRepositoryImpl.addTransaction(
           transaction: TransactionModel.fromMap(transactionMap),
@@ -153,7 +153,7 @@ void main() {
               params: any(named: 'params'),
             )).thenAnswer((_) async => {'data': transactionsList});
 
-        final result = await transactionRepositoryImpl.getTransactions();
+        final result = await transactionRepositoryImpl.getLatestTransactions();
 
         //THEN
         result.fold(
@@ -178,7 +178,7 @@ void main() {
               params: any(named: 'params'),
             )).thenAnswer((_) async => {'data': []});
 
-        final result = await transactionRepositoryImpl.getTransactions();
+        final result = await transactionRepositoryImpl.getLatestTransactions();
 
         //THEN
         result.fold(
@@ -198,9 +198,9 @@ void main() {
         when(() => mockDatabaseService.read(
               path: TransactionRepository.transactionsPath,
               params: any(named: 'params'),
-            )).thenThrow(const CacheException(code: 'read', ));
+            )).thenThrow(const CacheException(code: 'read'));
 
-        final result = await transactionRepositoryImpl.getTransactions();
+        final result = await transactionRepositoryImpl.getLatestTransactions();
 
         //THEN
         result.fold(
@@ -259,7 +259,7 @@ void main() {
           () => mockDatabaseService.delete(
               path: TransactionRepository.transactionsPath,
               params: {'id': transactionMap['id']}),
-        ).thenThrow(const CacheException(code: 'delete', ));
+        ).thenThrow(const CacheException(code: 'delete'));
 
         // Act
         final result = await transactionRepositoryImpl
@@ -293,7 +293,7 @@ void main() {
             path: TransactionRepository.transactionsPath,
             params: TransactionModel.fromMap(transactionMap)
                 .copyWith(syncStatus: SyncStatus.delete)
-                .toDatabase())).thenThrow(const CacheException(code: 'write',));
+                .toDatabase())).thenThrow(const CacheException(code: 'write'));
 
         // Act
         final result = await transactionRepositoryImpl
@@ -340,7 +340,7 @@ void main() {
             path: TransactionRepository.transactionsPath,
             params: any(
               named: 'params',
-            ))).thenThrow(const CacheException(code: 'write', ));
+            ))).thenThrow(const CacheException(code: 'write'));
 
         // Act
         final result = await transactionRepositoryImpl
@@ -750,7 +750,7 @@ void main() {
             path: TransactionRepository.balancesPath,
             params: any(
               named: 'params',
-            ))).thenThrow(const CacheException(code: 'read', ));
+            ))).thenThrow(const CacheException(code: 'read'));
 
         final oldTransaction = TransactionModel.fromMap(transactionMap);
         final newTransaction = oldTransaction.copyWith(value: 200);
@@ -781,7 +781,7 @@ void main() {
             path: TransactionRepository.balancesPath,
             params: any(
               named: 'params',
-            ))).thenThrow(const CacheException(code: 'update', ));
+            ))).thenThrow(const CacheException(code: 'update'));
 
         final oldTransaction = TransactionModel.fromMap(transactionMap);
         final newTransaction = oldTransaction.copyWith(value: 200);
@@ -808,7 +808,7 @@ void main() {
             path: TransactionRepository.balancesPath,
             params: any(
               named: 'params',
-            ))).thenThrow(const CacheException(code: 'read', ));
+            ))).thenThrow(const CacheException(code: 'read'));
 
         final result = await transactionRepositoryImpl.getBalances();
 

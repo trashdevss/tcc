@@ -192,43 +192,45 @@ class SyncService {
 
   ///Performs server sync calls based on [SyncStatus].
   Future<void> _syncLocalTransactionsToServer(
-      TransactionModel localTransaction) async {
-    log('_syncLocalTransactionsToServer called', name: 'INFO');
-    try {
-      var response = {};
+  TransactionModel localTransaction,
+) async {
+  log('_syncLocalTransactionsToServer called', name: 'INFO');
+  try {
+    var response = {};
 
-      switch (localTransaction.syncStatus) {
-        case SyncStatus.create:
-          response = await graphQLService.create(
-            path: Mutations.mAddNewTransaction,
-            params: localTransaction.toMap(),
-          );
-          break;
-        case SyncStatus.update:
-          final transactionWithoutUserId = localTransaction.toMap();
-          transactionWithoutUserId
-              .removeWhere((key, value) => key == 'user_id');
+    switch (localTransaction.syncStatus) {
+      case SyncStatus.create:
+        response = await graphQLService.create(
+          path: Mutations.mAddNewTransaction,
+          params: localTransaction.toGraphQLInput(), // <- AJUSTE AQUI
+        );
+        break;
+      case SyncStatus.update:
+        final input = localTransaction.toGraphQLInput();
+        input.removeWhere((key, value) => key == 'user_id');
 
-          response = await graphQLService.update(
-            path: Mutations.mUpdateTransaction,
-            params: transactionWithoutUserId,
-          );
-          break;
-        case SyncStatus.delete:
-          response = await graphQLService.delete(
-              path: Mutations.mDeleteTransaction,
-              params: {'id': localTransaction.id});
-          break;
-        default:
-          response = response;
-      }
-
-      if (response.isEmpty) {
-        throw const SyncException(code: 'error');
-      }
-    } catch (e) {
-      log('_syncLocalTransactionsToServer exception $e', name: 'ERROR');
-      rethrow;
+        response = await graphQLService.update(
+          path: Mutations.mUpdateTransaction,
+          params: input,
+        );
+        break;
+      case SyncStatus.delete:
+        response = await graphQLService.delete(
+          path: Mutations.mDeleteTransaction,
+          params: {'id': localTransaction.id},
+        );
+        break;
+      default:
+        response = response;
     }
+
+    if (response.isEmpty) {
+      throw const SyncException(code: 'error');
+    }
+  } catch (e) {
+    log('_syncLocalTransactionsToServer exception $e', name: 'ERROR');
+    rethrow;
   }
+}
+
 }

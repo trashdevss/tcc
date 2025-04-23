@@ -16,6 +16,8 @@ abstract class DataResult<S> {
         (data) => data,
       );
 
+  get isSuccess => null;
+
   T fold<T>(
     T Function(Failure error) fnFailure,
     T Function(S data) fnData,
