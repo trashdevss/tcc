@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:tcc_3/common/extensions/extensions.dart';
 
@@ -11,7 +10,6 @@ import 'profile_state.dart';
 import 'widgets/profile_change_name_widget.dart';
 import 'widgets/profile_change_password_widget.dart';
 
-
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -22,12 +20,14 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage>
     with CustomModalSheetMixin, CustomSnackBar {
   final _profileController = locator.get<ProfileController>();
+  final _syncController = locator.get<SyncController>();
 
   @override
   void initState() {
     super.initState();
     _profileController.getUserData();
     _profileController.addListener(_handleProfileStateChange);
+    _syncController.addListener(_handleSyncStateChange);
   }
 
   @override
@@ -53,8 +53,8 @@ class _ProfilePageState extends State<ProfilePage>
             isDismissible: false,
             onPressed: () => Navigator.pushNamedAndRemoveUntil(
               context,
-              NamedRoute.signIn,
-              ModalRoute.withName(NamedRoute.initial),
+              NamedRoute.initial,
+              (route) => false,
             ),
           );
         }
@@ -84,6 +84,47 @@ class _ProfilePageState extends State<ProfilePage>
             type: SnackBarType.success,
           );
         }
+    }
+  }
+
+  void _handleSyncStateChange() async {
+    switch (_syncController.state.runtimeType) {
+      case DownloadingDataFromServer:
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (context) => WillPopScope(
+            onWillPop: () async => Future.value(false),
+            child: const CustomCircularProgressIndicator(),
+          ),
+        );
+        break;
+      case DownloadedDataFromServer:
+        _syncController.syncToServer();
+        break;
+      case UploadedDataToServer:
+        Navigator.pop(context);
+        await locator.get<AuthService>().signOut();
+        await locator.get<SecureStorageService>().deleteAll();
+        await locator.get<DatabaseService>().deleteDB;
+        if (!mounted) return;
+
+        Navigator.popAndPushNamed(
+          context,
+          NamedRoute.initial,
+        );
+        break;
+      case SyncStateError:
+      case UploadDataToServerError:
+      case DownloadDataFromServerError:
+        Navigator.pop(context);
+        showCustomModalBottomSheet(
+          context: context,
+          content: (_syncController.state as SyncStateError).message,
+          buttonText: "Try again",
+          onPressed: () => Navigator.of(context).pop(),
+        );
+        break;
     }
   }
 
@@ -200,22 +241,22 @@ class _ProfilePageState extends State<ProfilePage>
                                     ),
                                   ),
                                   TextButton.icon(
-                                    onPressed: () async {
-                                      await locator
-                                          .get<AuthService>()
-                                          .signOut();
-                                      await locator
-                                          .get<SecureStorageService>()
-                                          .deleteAll();
-                                      await locator
-                                          .get<DatabaseService>()
-                                          .deleteDB;
-                                      if (!mounted) return;
+                                    onPressed: () {
+                                      _syncController.syncFromServer();
 
-                                      Navigator.popUntil(
-                                        context,
-                                        ModalRoute.withName(NamedRoute.initial),
-                                      );
+
+
+
+
+
+
+
+
+
+
+
+
+
                                     },
                                     icon: const Icon(
                                       Icons.logout_outlined,

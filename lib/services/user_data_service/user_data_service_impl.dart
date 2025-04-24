@@ -5,7 +5,6 @@ import '../../common/data/data.dart';
 import '../../common/models/models.dart';
 import 'user_data_service.dart';
 
-UserModel _userData = UserModel();
 
 class UserDataServiceImpl implements UserDataService {
   UserDataServiceImpl(
@@ -16,6 +15,8 @@ class UserDataServiceImpl implements UserDataService {
 
   final FirebaseAuth _auth;
   final FirebaseFunctions _functions;
+  
+  UserModel _userData = UserModel();
 
   @override
   Future<DataResult<UserModel>> getUserData() async {

@@ -53,6 +53,8 @@ dependencies:
     sdk: flutter
   foundation: ^0.0.5
   dotenv: ^4.2.0
+  fl_chart: ^0.71.0
+  font_awesome_flutter: ^10.8.0
 
 dev_dependencies:
   flutter_test:

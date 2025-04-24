@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_3/common/extensions/page_controller_ext.dart';
 import 'package:tcc_3/common/features/balance_controller.dart';
 
 import '../../common/constants/constants.dart';
-import '../../common/extensions/extensions.dart';
 import '../../common/features/transaction/transaction.dart';
 import '../../common/widgets/widgets.dart';
 import '../../locator.dart';
 import '../profile/profile.dart';
+import '../stats/stats_controller.dart';
 import '../stats/stats_page.dart';
 import '../wallet/wallet.dart';
 import 'home_controller.dart';
@@ -23,6 +24,7 @@ class _HomePageViewState extends State<HomePageView> {
   final homeController = locator.get<HomeController>();
   final walletController = locator.get<WalletController>();
   final balanceController = locator.get<BalanceController>();
+  final statsController = locator.get<StatsController>();
 
   @override
   void initState() {
@@ -41,7 +43,10 @@ class _HomePageViewState extends State<HomePageView> {
 
   @override
   Widget build(BuildContext context) {
+    homeController.pageController.setBottomAppBarItemIndex = 0;
+
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: PageView(
         physics: const NeverScrollableScrollPhysics(),
         controller: homeController.pageController,
@@ -56,12 +61,18 @@ class _HomePageViewState extends State<HomePageView> {
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/transaction');
           if (result != null) {
-            if (homeController.pageController.page == 0) {
-              homeController.getLatestTransactions();
+            switch (homeController.pageController.page) {
+              case 0:
+                homeController.getLatestTransactions();
+                break;
+              case 1:
+                statsController.getTrasactionsByPeriod();
+                break;
+              case 2:
+                walletController.getTransactionsByDateRange();
+                break;
             }
-            if (homeController.pageController.page == 2) {
-              walletController.getTransactionsByDateRange();
-            }
+
             balanceController.getBalances();
           }
         },

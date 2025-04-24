@@ -1,6 +1,7 @@
+
 import 'package:flutter/material.dart';
+import 'package:tcc_3/features/home/home_controller.dart';
 import 'package:tcc_3/locator.dart';
-import 'package:tcc_3/services/user_data_service/user_data_service.dart';
 
 import '../constants/constants.dart';
 import '../extensions/extensions.dart';
@@ -36,7 +37,7 @@ class GreetingsWidget extends StatelessWidget {
           style: AppTextStyles.smallText.apply(color: AppColors.white),
         ),
         Text(
-          (locator.get<UserDataService>().userData.name ?? '')
+          (locator.get<HomeController>().userData.name ?? '')
               .capitalize()
               .firstWord,
           textScaleFactor: textScaleFactor,

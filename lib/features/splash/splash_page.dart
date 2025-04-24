@@ -5,7 +5,6 @@ import 'package:tcc_3/services/sync_services/sync_state.dart';
 import '../../common/constants/constants.dart';
 import '../../common/extensions/extensions.dart';
 import '../../common/widgets/widgets.dart';
-
 import '../../locator.dart';
 import 'splash_controller.dart';
 import 'splash_state.dart';
@@ -58,9 +57,10 @@ class _SplashPageState extends State<SplashPage> with CustomModalSheetMixin {
         _syncController.syncToServer();
         break;
       case UploadedDataToServer:
-        Navigator.pushReplacementNamed(
+        Navigator.pushNamedAndRemoveUntil(
           context,
           NamedRoute.home,
+          (route) => false,
         );
         break;
       case SyncStateError:
@@ -73,8 +73,8 @@ class _SplashPageState extends State<SplashPage> with CustomModalSheetMixin {
           isDismissible: false,
           onPressed: () => Navigator.pushNamedAndRemoveUntil(
             context,
-            NamedRoute.signIn,
-            ModalRoute.withName(NamedRoute.initial),
+            NamedRoute.initial,
+            (route) => false,
           ),
         );
         break;

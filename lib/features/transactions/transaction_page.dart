@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:tcc_3/common/features/balance_controller.dart';
+import 'package:tcc_3/common/helpers/category_icon_helper.dart';
 import '../../common/constants/constants.dart';
 import '../../common/extensions/extensions.dart';
 import '../../common/features/transaction/transaction.dart';
@@ -46,7 +47,6 @@ class _TransactionPageState extends State<TransactionPage>
     if (widget.transaction != null && widget.transaction!.value.isNegative) {
       return 1;
     }
-
     return 0;
   }
 
@@ -256,19 +256,22 @@ class _TransactionPageState extends State<TransactionPage>
                         },
                         onTap: () => showModalBottomSheet(
                           context: context,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                          ),
                           builder: (context) => Column(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: (_tabController.index == 0
                                     ? _incomes
                                     : _outcomes)
                                 .map(
-                                  (e) => TextButton(
-                                    onPressed: () {
+                                  (e) => ListTile(
+                                    leading: Icon(CategoryIconHelper.getIcon(e)),
+                                    title: Text(e),
+                                    onTap: () {
                                       _categoryController.text = e;
                                       Navigator.pop(context);
                                     },
-                                    child: Text(e),
                                   ),
                                 )
                                 .toList(),

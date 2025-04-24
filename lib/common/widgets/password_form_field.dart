@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -41,7 +42,10 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
   Widget build(BuildContext context) {
     return CustomTextFormField(
       onTap: widget.onTap,
-      onEditingComplete: widget.onEditingComplete,
+      onEditingComplete: widget.onEditingComplete ??
+          () {
+            FocusScope.of(context).nextFocus();
+          },
       focusNode: widget.focusNode,
       onTapOutside: widget.onTapOutside ??
           (_) {

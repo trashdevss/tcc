@@ -2,7 +2,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:tcc_3/common/features/balance_controller.dart';
-
+import 'package:tcc_3/features/stats/stats_controller.dart';
 import 'common/features/transaction/transaction.dart';
 import 'features/home/home_controller.dart';
 import 'features/profile/profile_controller.dart';
@@ -115,4 +115,7 @@ void setupDependencies() {
 
   locator.registerFactory<ProfileController>(
       () => ProfileController(userDataService: locator.get<UserDataService>()));
-}
+
+   locator.registerLazySingleton<StatsController>(() => StatsController(
+      transactionRepository: locator.get<TransactionRepository>()));
+}   
