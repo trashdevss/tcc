@@ -1,4 +1,6 @@
 import 'package:flutter/painting.dart';
+// Se você usa AppColors aqui, adicione o import:
+// import 'app_colors.dart';
 
 class AppTextStyles {
   AppTextStyles._();
@@ -45,6 +47,14 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
   );
 
+  // === DEFINIÇÃO CORRETA PARA mediumText14 ADICIONADA ===
+  static const TextStyle mediumText14 = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 14.0,
+    fontWeight: FontWeight.w500, // Ajuste o fontWeight se necessário
+  );
+  // =====================================================
+
   static const TextStyle smallText = TextStyle(
     fontFamily: 'Inter',
     fontSize: 14.0,
@@ -74,8 +84,8 @@ class AppTextStyles {
     fontWeight: FontWeight.w400,
   );
 
-  // ignore: prefer_typing_uninitialized_variables
-  static var mediumText16;
+  // === LINHA INCORRETA REMOVIDA ===
+  // static var mediumText16;
+  // ================================
 
-  
-}
+} // Fim da classe AppTextStyles

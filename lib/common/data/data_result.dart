@@ -1,4 +1,10 @@
-import 'exceptions.dart';
+// lib/common/data/data_result.dart
+
+// === IMPORT CORRIGIDO ===
+// Usando o caminho completo do pacote baseado na sua estrutura de pastas
+import 'package:tcc_3/common/data/exceptions.dart'; // <<< CORRIGIDO
+// ========================
+
 
 abstract class DataResult<S> {
   const DataResult();
@@ -16,7 +22,8 @@ abstract class DataResult<S> {
         (data) => data,
       );
 
-  get isSuccess => null;
+  // Getter isSuccess corrigido
+  bool get isSuccess => this is _SuccessResult<S>;
 
   T fold<T>(
     T Function(Failure error) fnFailure,
@@ -39,7 +46,6 @@ class _SuccessResult<S> extends DataResult<S> {
 
 class _FailureResult<S> extends DataResult<S> {
   const _FailureResult(this._value);
-
   final Failure _value;
 
   @override

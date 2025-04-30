@@ -306,7 +306,7 @@ class _WalletPageState extends State<WalletPage>
                             // Retorna a ListView de Transações
                             return TransactionListView(
                               // Chave para ajudar o Flutter a identificar mudanças
-                              key: ValueKey('${_walletController.selectedDate}-${filterType}-${transactionsToShow.length}'),
+                              key: ValueKey('${_walletController.selectedDate}-$filterType-${transactionsToShow.length}'),
                               transactionList: transactionsToShow,
                               selectedDate: _walletController.selectedDate,
                               filterType: filterType, // Passa o filtro atual
