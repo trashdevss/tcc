@@ -1,5 +1,7 @@
-import '../../common/data/data.dart';
-import '../../common/models/models.dart';
+// lib/services/auth_service.dart (ou o caminho correto no seu projeto)
+
+import '../../common/data/data.dart'; // Para DataResult
+import '../../common/models/models.dart'; // Para UserModel
 
 abstract class AuthService {
   Future<DataResult<UserModel>> signUp({
@@ -16,4 +18,9 @@ abstract class AuthService {
   Future<void> signOut();
 
   Future<DataResult<String>> userToken();
+
+  // +++ GETTER ADICIONADO +++
+  // Retorna o ID do usuário logado atualmente, ou null se não houver usuário.
+  String? get currentUserId;
+  // ++++++++++++++++++++++++
 }

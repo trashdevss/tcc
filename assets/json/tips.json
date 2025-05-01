@@ -1,0 +1,93 @@
+[
+  {
+    "id": "dica001",
+    "title": "Para Onde Vai Seu Dinheiro?",
+    "subtitle": "Registrar e analisar para onde seu dinheiro está indo é o primeiro passo essencial para tomar decisões financeiras mais inteligentes.",
+    "imageUrl": "assets/images/image.png",
+    "action": { "type": "navigateTo", "value": "/stats" }
+  },
+  {
+    "id": "dica002",
+    "title": "Orçamento: Seu Mapa Financeiro",
+    "subtitle": "Quer aplicar a regra 50/30/20 mas não sabe como? Simule seu orçamento ideal com nossa calculadora e veja como organizar sua renda de forma simples.",
+    "imageUrl": "assets/images/image.png",
+    "action": { "type": "navigateTo", "value": "/budget-calculator" }
+  },
+  {
+    "id": "dica003",
+    "title": "Cartão de Crédito: Amigo ou Vilão?",
+    "subtitle": "Pagar o mínimo do cartão custa caro! Veja o impacto real dos juros na sua dívida e quanto você economiza pagando mais. Simule agora com nossa calculadora!",
+    "imageUrl": "assets/images/image.png",
+    "action": { "type": "navigateTo", "value": "/debt-calculator" }
+  },
+  {
+    "id": "dica004",
+    "title": "A Mágica dos Juros Compostos",
+    "subtitle": "O tempo é seu aliado! Veja na prática como seus investimentos podem crescer com os juros compostos. Use nossa calculadora e visualize seu futuro financeiro.",
+    "imageUrl": "assets/images/image.png",
+    "action": { "type": "navigateTo", "value": "/compound-interest-calculator" }
+  },
+  {
+    "id": "dica005",
+    "title": "Defina Suas Metas!",
+    "subtitle": "Economizar fica mais fácil quando você sabe *para quê*. Defina metas claras, como uma viagem ou um curso, e acompanhe seu progresso!",
+    "imageUrl": "assets/images/image.png",
+    "action": { "type": "navigateTo", "value": "/metas" }
+  },
+  {
+    "id": "dica006",
+    "title": "Reserva de Emergência: Comece Já!",
+    "subtitle": "Guarde um valor (idealmente 3-6 meses de custo de vida) para cobrir imprevistos como problemas de saúde ou perda de renda inesperada.",
+    "imageUrl": "assets/images/image.png",
+    "action": { "type": "showInfo", "value": "info_reserva_emergencia" }
+  },
+  {
+    "id": "dica007",
+    "title": "Necessidade vs. Desejo",
+    "subtitle": "Antes de comprar, pergunte-se: 'Eu preciso disso agora ou é apenas um desejo momentâneo?'. Isso ajuda a evitar compras por impulso.",
+    "imageUrl": "assets/images/image.png",
+    "action": null
+  },
+  {
+    "id": "dica008",
+    "title": "Investir Não é Só Para Ricos",
+    "subtitle": "Existem diversas opções acessíveis no mercado, como Tesouro Direto ou CDBs, que permitem começar a investir com valores baixos.",
+    "imageUrl": "assets/images/image.png",
+    "action": null
+  },
+  {
+    "id": "dica009",
+    "title": "Cuidado com Golpes Financeiros!",
+    "subtitle": "Nunca compartilhe senhas ou dados pessoais e desconfie de ofertas que parecem boas demais para ser verdade, especialmente online.",
+    "imageUrl": "assets/images/image.png",
+    "action": null
+  },
+  {
+    "id": "dica010",
+    "title": "Planeje Compras Grandes",
+    "subtitle": "Evite parcelamentos longos ou dívidas desnecessárias. Planeje e economize para compras de maior valor, como um celular ou uma viagem.",
+    "imageUrl": "assets/images/image.png",
+    "action": { "type": "navigateTo", "value": "/metas" }
+  },
+  {
+    "id": "dica011",
+    "title": "Negocie Suas Dívidas",
+    "subtitle": "Vai negociar dívidas? Entender os números é crucial. Simule o impacto de diferentes taxas e prazos com nossa calculadora antes de conversar com o credor.",
+    "imageUrl": "assets/images/image.png",
+    "action": { "type": "navigateTo", "value": "/debt-calculator" }
+  },
+  {
+    "id": "dica012",
+    "title": "Renda Extra: Uma Ajuda e Tanto",
+    "subtitle": "Explore suas habilidades ou venda itens parados para gerar uma renda extra e acelerar o alcance dos seus objetivos financeiros.",
+    "imageUrl": "assets/images/image.png",
+    "action": null
+  },
+  {
+    "id": "dica013",
+    "title": "Crédito vs. Débito: Qual Usar?",
+    "subtitle": "O débito usa o dinheiro da sua conta na hora, enquanto o crédito cria uma fatura. Use o crédito com planejamento e aproveite o débito para controlar gastos.",
+    "imageUrl": "assets/images/image2.jpg",
+    "action": { "type": "showInfo", "value": "info_credito_debito" }
+  }
+]

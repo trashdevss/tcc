@@ -15,6 +15,8 @@ class FirebaseAuthService implements AuthService {
 
   final FirebaseAuth _auth;
   final FirebaseFunctions _functions;
+ @override // <-- Implementa o getter da interface
+  String? get currentUserId => _auth.currentUser?.uid; // <-- Adicionar estas linhas aqui
 
   @override
   Future<DataResult<UserModel>> signIn({
