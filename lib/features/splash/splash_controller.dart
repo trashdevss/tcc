@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 
-import '../../services/secure_storage.dart';
+import '../../services/services.dart';
 import 'splash_state.dart';
 
 class SplashController extends ChangeNotifier {
@@ -25,8 +25,15 @@ class SplashController extends ChangeNotifier {
   Future<void> isUserLogged() async {
     final result = await secureStorageService.readOne(key: "CURRENT_USER");
     if (result != null) {
-
       _changeState(AuthenticatedUser());
+
+
+
+
+
+
+
+
     } else {
       _changeState(UnauthenticatedUser());
     }

@@ -1,25 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_3/features/repositories/transaction_repository.dart';
 
-import '../../common/models/transaction_model.dart';
+import '../../common/models/models.dart';
+import '../../repositories/repositories.dart';
+import '../../services/services.dart';
 import 'home_state.dart';
 
 class HomeController extends ChangeNotifier {
   HomeController({
-    required this.transactionRepository,
-  });
+    required TransactionRepository transactionRepository,
+    required UserDataService userDataService,
+  })  : _userDataService = userDataService,
+        _transactionRepository = transactionRepository;
 
-  final TransactionRepository transactionRepository;
+  final TransactionRepository _transactionRepository;
+  final UserDataService _userDataService;
 
   HomeState _state = HomeStateInitial();
 
   HomeState get state => _state;
 
-  List<TransactionModel> _transactions = [];
-  List<TransactionModel> get transactions => _transactions;
+  UserModel get userData => _userDataService.userData;
 
   late PageController _pageController;
   PageController get pageController => _pageController;
+
+  List<TransactionModel> _transactions = [];
+  List<TransactionModel> get transactions => _transactions;
 
   set setPageController(PageController newPageController) {
     _pageController = newPageController;
@@ -33,14 +39,25 @@ class HomeController extends ChangeNotifier {
   Future<void> getLatestTransactions() async {
     _changeState(HomeStateLoading());
 
-    final result = await transactionRepository.getTransactions(limit: 5);
+    final result = await _transactionRepository.getLatestTransactions();
 
     result.fold(
       (error) => _changeState(HomeStateError(message: error.message)),
       (data) {
         _transactions = data;
+
         _changeState(HomeStateSuccess());
       },
+    );
+  }
+
+  Future<void> getUserData() async {
+    _changeState(HomeStateLoading());
+    final result = await _userDataService.getUserData();
+
+    result.fold(
+      (error) => _changeState(HomeStateError(message: error.message)),
+      (data) => _changeState(HomeStateSuccess()),
     );
   }
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -5,6 +7,7 @@ import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 
 class CustomTextFormField extends StatefulWidget {
+  final EdgeInsetsGeometry? padding;
   final String? hintText;
   final String? labelText;
   final TextCapitalization? textCapitalization;
@@ -21,11 +24,12 @@ class CustomTextFormField extends StatefulWidget {
   final bool readOnly;
   final FocusNode? focusNode;
   final ValueSetter<PointerEvent>? onTapOutside;
+
   final VoidCallback? onEditingComplete;
-  final EdgeInsetsGeometry? padding; // 👈 Novo parâmetro
 
   const CustomTextFormField({
     super.key,
+    this.padding,
     this.hintText,
     this.labelText,
     this.textCapitalization,
@@ -43,7 +47,6 @@ class CustomTextFormField extends StatefulWidget {
     this.focusNode,
     this.onTapOutside,
     this.onEditingComplete,
-    this.padding, // 👈 Novo parâmetro
   });
 
   @override
@@ -58,25 +61,21 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
   );
 
   String? _helperText;
-  bool _isObscure = true;
 
   @override
   void initState() {
     super.initState();
     _helperText = widget.helperText;
-    _isObscure = widget.obscureText ?? true;
-  }
-
-  void _toggleObscure() {
-    setState(() {
-      _isObscure = !_isObscure;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: widget.padding ?? EdgeInsets.zero, // 👈 Aplica padding se informado
+      padding: widget.padding ??
+          const EdgeInsets.symmetric(
+            horizontal: 24.0,
+            vertical: 12.0,
+          ),
       child: TextFormField(
         focusNode: widget.focusNode,
         readOnly: widget.readOnly,
@@ -105,7 +104,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
         validator: widget.validator,
         style: AppTextStyles.inputText.copyWith(color: AppColors.greenOne),
         inputFormatters: widget.inputFormatters,
-        obscureText: widget.obscureText == true ? _isObscure : false,
+        obscureText: widget.obscureText ?? false,
         textInputAction: widget.textInputAction,
         maxLength: widget.maxLength,
         keyboardType: widget.keyboardType,
@@ -116,31 +115,10 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
           errorMaxLines: 3,
           helperText: _helperText,
           helperMaxLines: 3,
-          suffixIcon: widget.obscureText == true
-              ? IconButton(
-                  icon: Icon(
-                    _isObscure ? Icons.visibility : Icons.visibility_off,
-                    color: AppColors.darkGreen,
-                  ),
-                  onPressed: _toggleObscure,
-                )
-              : widget.suffixIcon,
+          suffixIcon: widget.suffixIcon,
           hintText: widget.hintText,
-          hintStyle: const TextStyle(color: AppColors.darkGreen),
           floatingLabelBehavior: FloatingLabelBehavior.always,
           labelText: widget.labelText?.toUpperCase(),
-          labelStyle: AppTextStyles.inputLabelText.copyWith(
-            color: AppColors.grey,
-          ),
-          focusedBorder: defaultBorder,
-          errorBorder: defaultBorder.copyWith(
-            borderSide: const BorderSide(color: AppColors.error),
-          ),
-          focusedErrorBorder: defaultBorder.copyWith(
-            borderSide: const BorderSide(color: AppColors.error),
-          ),
-          enabledBorder: defaultBorder,
-          disabledBorder: defaultBorder,
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:tcc_3/common/data/data_result.dart';
 import 'package:tcc_3/common/models/user_model.dart';
 import 'package:tcc_3/features/splash/splash_controller.dart';
 import 'package:tcc_3/features/splash/splash_state.dart';
@@ -7,16 +8,16 @@ import 'package:tcc_3/features/splash/splash_state.dart';
 import '../../mock/mock_classes.dart';
 
 void main() {
-  late MockSecureStorage secureStorage;
+  late MockSyncService mockSyncService;
+  late MockSecureStorageService mockSecureStorage;
   late SplashController splashController;
-  late MockGraphQLService mockGraphQLService;
   late UserModel user;
 
   setUp(() {
-    secureStorage = MockSecureStorage();
-    mockGraphQLService = MockGraphQLService();
+    mockSecureStorage = MockSecureStorageService();
+    mockSyncService = MockSyncService();
     splashController = SplashController(
-      secureStorageService: secureStorage,
+      secureStorageService: mockSecureStorage,
 
     );
     user = UserModel(
@@ -24,11 +25,16 @@ void main() {
       email: 'user@email.com',
       id: '1a2b3c4d5e',
     );
+
+    when(() => mockSyncService.syncFromServer())
+        .thenAnswer((_) async => DataResult.success(null));
+    when(() => mockSyncService.syncToServer())
+        .thenAnswer((_) async => DataResult.success(null));
   });
 
   group('Tests Splash Controller', () {
     test('Should update state to UnauthenticatedUser', () async {
-      when(() => secureStorage.readOne(key: 'CURRENT_USER'))
+      when(() => mockSecureStorage.readOne(key: 'CURRENT_USER'))
           .thenAnswer((_) async => null);
 
       expect(splashController.state, isInstanceOf<SplashStateInitial>());
@@ -38,11 +44,8 @@ void main() {
       expect(splashController.state, isInstanceOf<UnauthenticatedUser>());
     });
     test('Should update state to AuthenticatedUser', () async {
-      when(() => secureStorage.readOne(key: 'CURRENT_USER'))
+      when(() => mockSecureStorage.readOne(key: 'CURRENT_USER'))
           .thenAnswer((_) async => user.toJson());
-
-      when(() => mockGraphQLService.init())
-          .thenAnswer((_) async => mockGraphQLService);
 
       expect(splashController.state, isInstanceOf<SplashStateInitial>());
 

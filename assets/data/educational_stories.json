@@ -1,0 +1,122 @@
+[
+  {
+    "id": "fin001",
+    "title": "Para Onde Vai Seu Dinheiro?",
+    "content_type": "text_image",
+    "text_content": "O primeiro passo para controlar as finanças é saber onde você gasta! Tente anotar TUDO por um mês (app, planilha, caderno). Você pode se surpreender!",
+    "image_path": "assets/images/imagem1.jpg",
+    "tool_link": null
+  },
+  {
+    "id": "fin002",
+    "title": "Orçamento: Seu Mapa Financeiro",
+    "content_type": "text",
+    "text_content": "Depois de saber onde gasta, crie um orçamento simples. A regra 50/30/20 é um bom começo! Use nossa calculadora para ver como dividir sua renda mensal entre gastos essenciais, não essenciais e poupança/metas.", 
+    "image_path": "assets/images/imagem2.jpg",
+    "tool_link": "budget_calculator"
+  },
+  {
+    "id": "fin003",
+    "title": "Cartão de Crédito: Amigo ou Vilão?",
+    "content_type": "text_image",
+    "text_content": "O cartão de crédito exige cuidado! Pagar só o mínimo gera juros altíssimos (rotativo). Quer ver o tamanho do estrago que pagar o mínimo pode causar comparado a pagar um valor maior? Use nossa calculadora e simule!", 
+    "image_path": "assets/images/imagem3.jpg",
+    "tool_link": "debt_calculator"
+  },
+  {
+    "id": "fin004",
+    "title": "Compras por Impulso? Espere 24h!",
+    "content_type": "text",
+    "text_content": "Viu algo legal e quer comprar NA HORA? Resista! Espere 24 horas. Muitas vezes, a vontade passa. Se continuar querendo, veja se cabe no orçamento.",
+    "image_path": "assets/images/imagem4.jpg",
+    "tool_link": null
+  },
+  {
+    "id": "fin005",
+    "title": "Poupe um Pouquinho TODO Mês",
+    "content_type": "text_image",
+    "text_content": "Criar o hábito de poupar é o mais importante, mesmo que seja pouco! Comece com 5% ou 10% do que entra. Veja na nossa calculadora como até valores pequenos podem crescer bastante com o tempo graças aos juros compostos!", 
+    "image_path":"assets/images/imagem5.jpg",
+    "tool_link": "compound_interest_calculator"
+  },
+  {
+    "id": "fin006",
+    "title": "Reserva de Emergência: Seu Colchão",
+    "content_type": "text",
+    "text_content": "Imprevistos acontecem! Ter uma reserva de emergência (3-6 meses do seu custo) é essencial. Use a calculadora de orçamento para descobrir como encaixar a criação da sua reserva nos seus 20% de poupança/metas.", 
+    "image_path": "assets/images/imagem6.jpg",
+    "tool_link": "budget_calculator" 
+  },
+  {
+    "id": "fin007",
+    "title": "Dívidas? Encare o Problema!",
+    "content_type": "text_image",
+    "text_content": "Encare suas dívidas! Liste tudo, veja os juros e tente renegociar. Priorize as mais caras (juros altos, como cartão!). Use a calculadora de impacto da dívida para simular quanto tempo levará para quitar e o custo total dos juros.", 
+    "image_path": "assets/images/imagem7.jpg",
+    "tool_link": "debt_calculator"
+  },
+  {
+    "id": "fin008",
+    "title": "Consumo Consciente vs. Ostentação",
+    "content_type": "text",
+    "text_content": "Redes sociais mostram muito luxo, mas nem tudo é real. Compre o que você PRECISA e o que te faz feliz, não para impressionar os outros. Seu bolso agradece!",
+    "image_path": "assets/images/imagem8.jpg",
+    "tool_link": null
+  },
+  {
+    "id": "inv001",
+    "title": "O Que é Investir?",
+    "content_type": "text_image",
+    "text_content": "Investir é fazer seu dinheiro render! Ao contrário da poupança (só guardar), o investimento busca retornos maiores, mas envolve riscos. Quer ter uma ideia de como seu dinheiro pode crescer ao longo dos anos com diferentes taxas? Simule na nossa calculadora de juros compostos!", 
+    "image_path": "assets/images/imagem9.jpg",
+    "tool_link": "compound_interest_calculator"
+  },
+  {
+    "id": "inv002",
+    "title": "Comprando Ações (Exemplo Fictício)",
+    "content_type": "text_image",
+    "text_content": "Imagine que 1 ação da 'Empresa Exemplo Ltda' custe R$ 20. Com R$ 100, você poderia comprar 5 ações e se tornar um pequeno sócio!\n\n⚠️ **Atenção:** Valores e empresa fictícios! Isso é SÓ um exemplo educativo. Investir em ações tem riscos e preços mudam a todo instante. Não é recomendação.",
+    "image_path": "assets/images/imagem10.jpg",
+    "tool_link": null
+  },
+  {
+    "id": "inv003",
+    "title": "Risco vs. Retorno: O Equilíbrio",
+    "content_type": "text",
+    "text_content": "Normalmente, quanto MAIOR o potencial de retorno de um investimento (ex: ações), MAIOR o risco de perder dinheiro. Investimentos mais seguros (ex: Tesouro Direto) tendem a render MENOS.\n\n⚠️ **Atenção:** Rentabilidade passada não garante futura. Escolha investimentos alinhados ao seu perfil e objetivos.",
+    "image_path": "assets/images/imagem11.jpg",
+    "tool_link": null
+  },
+  {
+    "id": "inv004",
+    "title": "Não Ponha Todos Ovos na Mesma Cesta!",
+    "content_type": "text_image",
+    "text_content": "Isso é diversificar! Em vez de investir tudo numa só ação ou tipo de investimento, distribua seu dinheiro. Se um for mal, o outro pode compensar.\n\n⚠️ **Atenção:** Diversificar ajuda a reduzir riscos, mas não os elimina. Consulte informações oficiais (CVM, B3) e estude antes de investir.",
+    "image_path": "assets/images/imagem12.jpg",
+    "tool_link": null
+  },
+  {
+    "id": "inv005",
+    "title": "Investir é Pensar no Futuro",
+    "content_type": "text_image",
+    "text_content": "Renda variável (ações, etc.) exige paciência! O foco é o LONGO PRAZO. Use a calculadora de juros compostos para ver como o tempo é seu maior aliado ao investir, mesmo com aportes mensais pequenos. ⚠️ Atenção: Investimentos envolvem riscos.", 
+    "image_path": "assets/images/imagem13.jpg",
+    "tool_link": "compound_interest_calculator"
+  },
+  {
+    "id": "inv006",
+    "title": "Dividendos: Um 'Aluguel' das Ações?",
+    "content_type": "text",
+    "text_content": "Algumas empresas distribuem parte do lucro aos acionistas periodicamente. São os dividendos! É como receber um 'aluguel' por ser sócio. Nem toda empresa paga, e o valor varia.", 
+    "image_path":"assets/images/imagem14.jpg",
+    "tool_link": null
+  },
+  {
+    "id": "inv007",
+    "title": "Tesouro Direto: Segurança para Começar?",
+    "content_type": "text_image",
+    "text_content": "É um investimento de Renda Fixa considerado um dos mais seguros do país, pois você 'empresta' dinheiro para o governo. Existem diferentes tipos (Selic, Prefixado, IPCA+).\n\n⚠️ **Atenção:** Mesmo sendo seguro, tem suas regras e pode ter alguma variação se vender antes do prazo. Informe-se no site oficial do Tesouro Direto.",
+    "image_path": "assets/images/imagem15.png",
+    "tool_link": null 
+  }
+]
