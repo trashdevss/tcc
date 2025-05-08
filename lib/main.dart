@@ -34,7 +34,7 @@ void main() async {
   // Configura suas dependências com GetIt
   setupDependencies();
 
-  // Espera o GetIt ficar pronto (se tiver inicializações async nele)
+  // Espera o GetIt ficar p2  ronto (se tiver inicializações async nele)
   await locator.allReady();
 
   // Executa o App

@@ -264,6 +264,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_notification_listener:
+    dependency: "direct main"
+    description:
+      name: flutter_notification_listener
+      sha256: "5cdf1b12f8affcf7c265f4519af66ed231b27a4100751a37cd2bb246d6a364c1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.4"
   flutter_secure_storage:
     dependency: "direct main"
     description:
@@ -564,6 +572,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.8.2+1"
+  notification_listener:
+    dependency: "direct main"
+    description:
+      name: notification_listener
+      sha256: "9c62614bbe6daf0b60a807d089de8125a964a7b354fc023e40d285d52769e38e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2+1"
   path:
     dependency: transitive
     description:

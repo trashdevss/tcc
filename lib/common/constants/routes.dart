@@ -28,7 +28,8 @@ class NamedRoute {
   static const String debtCalculator = "/debt-calculator";
   static const String compoundInterestCalculator = "/compound-interest-calculator";
   static const String budgetCalculator = "/budget-calculator";
-
+  static const String notificationDemo = '/notification-demo';
+  
   // --- Outras Rotas ---
   static const String graficos = "/graficos"; // Manter se você usa
 }

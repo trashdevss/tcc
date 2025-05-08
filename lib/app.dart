@@ -23,7 +23,9 @@ import 'features/sign_up/sign_up.dart';
 import 'features/splash/splash.dart';
 import 'features/stats/stats.dart';
 import 'features/wallet/wallet.dart';
-
+// Importe a página
+import 'features/tools/view/notification_demo_page.dart'; // Ajuste o caminho se moveu
+// Adicione a rota
 // Imports da Feature Tools
 
 // +++ IMPORTS ADICIONADOS PARA METAS +++
@@ -80,6 +82,7 @@ class App extends StatelessWidget {
         NamedRoute.debtCalculator: (context) => const DebtImpactCalculatorPage(),
         NamedRoute.compoundInterestCalculator: (context) => const CompoundInterestCalculatorPage(),
         NamedRoute.budgetCalculator: (context) => const BudgetCalculatorPage(),
+        NamedRoute.notificationDemo: (context) => const NotificationDemoPage(),
 
         // +++ ROTA ADICIONADA/CORRIGIDA PARA ADD/EDIT META +++
         NamedRoute.addEditGoal: (context) {
