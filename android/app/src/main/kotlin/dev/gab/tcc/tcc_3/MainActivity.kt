@@ -17,8 +17,9 @@ class MainActivity : FlutterActivity() {
     private val METHOD_CHANNEL_NAME = "dev.gab.tcc/notifications_utils"
     private val TAG = "MainActivity_TCC"
 
-    // Nome completo da classe do serviço NotificationListenerService
-    private val NOTIFICATION_LISTENER_SERVICE_CLASS_NAME = "dev.gab.tcc.tcc_3.NotificationListener"
+    // Classe correta do serviço da lib flutter_notification_listener
+    private val NOTIFICATION_LISTENER_SERVICE_CLASS_NAME =
+        "im.zoe.labs.flutter_notification_listener.NotificationsHandlerService"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -29,12 +30,12 @@ class MainActivity : FlutterActivity() {
             .setStreamHandler(object : EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                     Log.i(TAG, "EventChannel: Flutter está ouvindo o canal $EVENT_CHANNEL_NAME.")
-                    NotificationListener.eventSink = events // <- ligação feita aqui
+                    NotificationListener.eventSink = events // <- ligação feita aqui (opcional, se tiver seu próprio listener)
                 }
 
                 override fun onCancel(arguments: Any?) {
                     Log.i(TAG, "EventChannel: Flutter parou de ouvir o canal $EVENT_CHANNEL_NAME.")
-                    NotificationListener.eventSink = null // <- limpeza feita aqui
+                    NotificationListener.eventSink = null
                 }
             })
 
@@ -46,6 +47,7 @@ class MainActivity : FlutterActivity() {
                         Log.i(TAG, "Verificação do serviço de notificação: $isEnabled")
                         result.success(isEnabled)
                     }
+
                     "requestNotificationPermissionScreen" -> {
                         try {
                             val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
@@ -64,6 +66,7 @@ class MainActivity : FlutterActivity() {
                             result.error("ERROR_OPENING_SETTINGS", "Erro ao abrir configurações.", e.localizedMessage)
                         }
                     }
+
                     else -> {
                         Log.w(TAG, "Método '${call.method}' não implementado.")
                         result.notImplemented()
@@ -81,6 +84,8 @@ class MainActivity : FlutterActivity() {
             context.contentResolver,
             "enabled_notification_listeners"
         )
+
+        Log.d(TAG, "enabled_notification_listeners: $enabledListeners") // Debug opcional
 
         if (!TextUtils.isEmpty(enabledListeners)) {
             val names = enabledListeners.split(":")

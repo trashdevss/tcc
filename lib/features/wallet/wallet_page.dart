@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Certifique-se de ter o pacote intl
+import 'package:intl/intl.dart';
 import 'package:tcc_3/common/features/balance_controller.dart';
 import 'package:tcc_3/common/features/balance_state.dart';
 import 'package:tcc_3/common/models/transaction_model.dart';
 
-// Adapte os imports para a estrutura real do seu projeto
-import '../../common/constants/constants.dart'; // Exemplo: AppColors, AppTextStyles
-import '../../common/extensions/extensions.dart'; // Exemplo: context.h, num.h
-import '../../common/widgets/widgets.dart'; // Exemplo: AppHeader, BasePage, CustomModalSheetMixin, TransactionListView, CustomCircularProgressIndicator, etc.
+import '../../common/constants/constants.dart';
+import '../../common/extensions/extensions.dart';
+import '../../common/widgets/widgets.dart';
 import '../../locator.dart';
-import '../home/home_controller.dart'; // Para navegação
+import '../home/home_controller.dart';
 import 'wallet_controller.dart';
 import 'wallet_state.dart';
 
@@ -22,85 +21,89 @@ class WalletPage extends StatefulWidget {
 
 class _WalletPageState extends State<WalletPage>
     with TickerProviderStateMixin, CustomModalSheetMixin {
-  // --- Controllers ---
   final _balanceController = locator.get<BalanceController>();
   final _walletController = locator.get<WalletController>();
-  final _homeController = locator.get<HomeController>(); // Para navegação
+  final _homeController = locator.get<HomeController>();
 
-  // --- Tab Controllers ---
   late final TabController _optionsTabController;
 
-  // --- Lifecycle Methods ---
   @override
   void initState() {
     super.initState();
-    _optionsTabController = TabController(
-      length: 2, // "Transactions", "Upcoming Bills"
-      vsync: this,
-    );
+    _optionsTabController = TabController(length: 2, vsync: this);
 
+    // Adiciona um listener para reconstruir a UI quando o controller notificar.
+    // O AnimatedBuilder já faz isso para a lista, mas pode ser útil para outras partes.
+    _walletController.addListener(_onWalletControllerUpdate);
+    _optionsTabController.addListener(_onTabChange); // Para redesenhar as abas
+
+    // Busca inicial
+    _fetchData();
+  }
+
+  void _fetchData() {
+    debugPrint("[WalletPage] _fetchData chamado");
     _walletController.getTransactionsByDateRange();
     _balanceController.getBalances();
-
-    _walletController.addListener(_handleWalletStateChange);
-    _optionsTabController.addListener(_handleTabChange);
   }
 
   @override
   void dispose() {
-    _optionsTabController.removeListener(_handleTabChange);
+    _optionsTabController.removeListener(_onTabChange);
     _optionsTabController.dispose();
-    _walletController.removeListener(_handleWalletStateChange);
+    _walletController.removeListener(_onWalletControllerUpdate);
     super.dispose();
   }
 
-  // --- State Handlers ---
-  void _handleWalletStateChange() {
+  void _onWalletControllerUpdate() {
+    // Este listener é chamado sempre que _walletController.notifyListeners() é chamado.
+    // O AnimatedBuilder já reage a isso para a lista.
+    // Se outras partes da UI precisarem ser reconstruídas com base no estado do walletController,
+    // você pode chamar setState aqui, mas geralmente é melhor usar AnimatedBuilder/Consumer.
     final state = _walletController.state;
-    switch (state.runtimeType) {
-      case WalletStateError:
-        if (!mounted) return;
-        showCustomModalBottomSheet(
-          context: context,
-          content: (state as WalletStateError).message,
-          buttonText: 'Go to login',
-          isDismissible: false,
-          onPressed: () => Navigator.pushNamedAndRemoveUntil(
-            context,
-            NamedRoute.initial,
-            (route) => false,
-          ),
-        );
-        break;
-      case WalletStateLoading:
-      case WalletStateSuccess:
-        if (mounted) {
-          // setState(() {}); // Geralmente não necessário
-        }
-        break;
+    debugPrint("[WalletPage] _onWalletControllerUpdate: Novo estado: $state");
+    if (state is WalletStateError) {
+      if (!mounted) return;
+      showCustomModalBottomSheet(
+        context: context,
+        content: state.message,
+        buttonText: 'Ir para Login',
+        isDismissible: false,
+        onPressed: () => Navigator.pushNamedAndRemoveUntil(
+          context,
+          NamedRoute.initial,
+          (route) => false,
+        ),
+      );
+    }
+    // Se precisar forçar um rebuild geral da página com base na mudança de estado do wallet:
+    // if (mounted) {
+    //   setState(() {});
+    // }
+  }
+
+  void _onTabChange() {
+    // Força a reconstrução do StatefulBuilder que contém a TabBar
+    // e também o AnimatedBuilder da lista (pois ele escuta _optionsTabController).
+    if (mounted) {
+      setState(() {
+        debugPrint("[WalletPage] Aba alterada, forçando rebuild para UI da TabBar e lista.");
+      });
     }
   }
 
-   void _handleTabChange() {
-     // Apenas para atualizar a aparência das abas via StatefulBuilder,
-     // o AnimatedBuilder da lista já escuta o controller.
-     // Se precisar forçar rebuild por causa da aba, descomente setState.
-     // setState(() {});
-   }
-
-  // --- Navigation Methods ---
   void _goToPreviousMonth() {
     final selectedDate = _walletController.selectedDate;
     _walletController.changeSelectedDate(
         DateTime(selectedDate.year, selectedDate.month - 1));
-    _walletController.getTransactionsByDateRange();
+    // changeSelectedDate no controller já chama getTransactionsByDateRange
   }
 
   void _goToNextMonth() {
     final selectedDate = _walletController.selectedDate;
     _walletController.changeSelectedDate(
         DateTime(selectedDate.year, selectedDate.month + 1));
-    _walletController.getTransactionsByDateRange();
+    // changeSelectedDate no controller já chama getTransactionsByDateRange
   }
 
   Future<bool> _onWillPop() async {
@@ -108,24 +111,22 @@ class _WalletPageState extends State<WalletPage>
     return false;
   }
 
-  // --- Build Method ---
   @override
   Widget build(BuildContext context) {
+    debugPrint("[WalletPage] Build method. Estado do WalletController: ${_walletController.state}");
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Stack(
         children: [
-          // --- Header ---
           AppHeader(
-            title: 'Wallet',
+            title: 'Minha Carteira',
             onPressed: () =>
                 _homeController.pageController.navigateTo(BottomAppBarItem.home),
           ),
-          // --- Page Content ---
           Positioned(
             left: 0,
             right: 0,
-            top: 120.h, // Ajuste conforme necessário
+            top: 120.h, // Ajuste conforme o tamanho do seu AppHeader
             bottom: 0,
             child: BasePage(
               child: Padding(
@@ -134,59 +135,43 @@ class _WalletPageState extends State<WalletPage>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // --- Seção do Saldo Total ---
-                    Center(
-                      child: Text(
-                        'Total Balance',
-                        style: AppTextStyles.inputLabelText.apply(color: AppColors.grey),
-                      ),
-                    ),
+                    Center(child: Text('Saldo Total', style: AppTextStyles.inputLabelText.apply(color: AppColors.grey))),
                     const SizedBox(height: 8.0),
                     Center(
                       child: AnimatedBuilder(
                           animation: _balanceController,
                           builder: (context, _) {
+                            // ... (lógica do saldo como antes)
                             if (_balanceController.state is BalanceStateLoading) {
-                              return const SizedBox(
-                                height: 36, // Mesmo tamanho do texto de saldo
-                                child: Center(child: CustomCircularProgressIndicator())
-                              );
+                              return const SizedBox(height: 36, child: Center(child: CustomCircularProgressIndicator()));
                             }
                             if (_balanceController.state is BalanceStateError) {
-                              return Text(
-                                'Error',
-                                style: AppTextStyles.mediumText30.apply(color: AppColors.outcome),
-                              );
+                              return Text('Erro Saldo', style: AppTextStyles.mediumText30.apply(color: AppColors.outcome));
                             }
-                            final formattedBalance = NumberFormat.currency(
-                              locale: 'en_US', // Ou 'pt_BR'
-                              symbol: '\$ ',   // Ou 'R\$ '
-                            ).format(_balanceController.balances.totalBalance);
-                            return Text(
-                              formattedBalance,
-                              style: AppTextStyles.mediumText30.apply(color: AppColors.blackGrey),
-                            );
+                            final balanceValue = _balanceController.balances?.totalBalance ?? 0.0;
+                            final formattedBalance = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$ ').format(balanceValue);
+                            return Text(formattedBalance,style: AppTextStyles.mediumText30.apply(color: AppColors.blackGrey));
                           }),
                     ),
                     const SizedBox(height: 24.0),
 
                     // --- Abas de Opções (Transactions / Upcoming Bills) ---
-                    StatefulBuilder(
-                      builder: (context, setTabState) {
-                        return TabBar(
-                          controller: _optionsTabController,
-                          labelPadding: EdgeInsets.zero,
-                          indicator: const BoxDecoration(),
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          onTap: (index) {
-                            // Apenas redesenha as abas para mudar a aparência ativa/inativa
-                            setTabState(() {});
-                          },
-                          tabs: [
-                            _buildFilterTab(context, 'Transactions', 0),
-                            _buildFilterTab(context, 'Upcoming Bills', 1),
-                          ],
-                        );
-                      },
+                    // Usar um Builder ou StatefulBuilder aqui pode não ser necessário se o _onTabChange com setState
+                    // já estiver a forçar a reconstrução desta parte da árvore de widgets.
+                    // O TabBar em si não precisa de um builder para mudar sua aparência com base no índice ativo,
+                    // pois o TabController e o tema do TabBar cuidam disso.
+                    // O StatefulBuilder original era para o onTap das abas redesenhar as abas em si.
+                    TabBar(
+                      controller: _optionsTabController,
+                      labelPadding: EdgeInsets.zero,
+                      indicator: const BoxDecoration(),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      // onTap não precisa de setTabState se _onTabChange com setState já faz o rebuild
+                      onTap: (index) => _optionsTabController.animateTo(index), // Apenas muda a aba
+                      tabs: [
+                        _buildFilterTab(context, 'Transações', 0),
+                        _buildFilterTab(context, 'Contas Futuras', 1),
+                      ],
                     ),
                     const SizedBox(height: 32.0),
 
@@ -194,105 +179,66 @@ class _WalletPageState extends State<WalletPage>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                          color: AppColors.green,
-                          onPressed: _goToPreviousMonth,
-                        ),
+                        IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded), color: AppColors.green, onPressed: _goToPreviousMonth),
+                        // Usar AnimatedBuilder para o texto do mês é bom se _selectedDate mudar e você quiser animação
+                        // ou apenas para garantir que ele reconstrói quando _walletController notifica.
                         AnimatedBuilder(
                           animation: _walletController,
                           builder: (context, _) => Text(
-                            DateFormat('MMMM yyyy', Localizations.localeOf(context).toString())
-                                .format(_walletController.selectedDate),
-                            style: AppTextStyles.mediumText16w600.apply(
-                              color: AppColors.green,
-                            ),
+                            DateFormat('MMMM yyyy', Localizations.localeOf(context).toString()).format(_walletController.selectedDate),
+                            style: AppTextStyles.mediumText16w600.apply(color: AppColors.green),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.arrow_forward_ios_outlined),
-                          color: AppColors.green,
-                          onPressed: _goToNextMonth,
-                        ),
+                        IconButton(icon: const Icon(Icons.arrow_forward_ios_outlined), color: AppColors.green, onPressed: _goToNextMonth),
                       ],
                     ),
-                    const SizedBox(height: 16.0), // Espaço antes da lista
+                    const SizedBox(height: 16.0),
 
-                    // --- Lista de Transações (Ocupa o espaço restante) ---
+                    // --- Lista de Transações ---
                     Expanded(
                       child: AnimatedBuilder(
-                        animation: Listenable.merge([
-                          _walletController, // Escuta mudanças de estado/dados/data
-                          _optionsTabController, // Escuta mudanças na aba selecionada
-                        ]),
+                        animation: Listenable.merge([_walletController, _optionsTabController]),
                         builder: (context, _) {
-                          // Determina o filtro com base na aba atual
+                          final walletState = _walletController.state;
                           final bool isUpcomingBills = _optionsTabController.index == 1;
-                          final String filterType = isUpcomingBills ? 'upcomingBills' : 'transactions';
+                          
+                          debugPrint("[WalletPage - ListBuilder] Estado: $walletState, Aba: ${isUpcomingBills ? 'Futuras' : 'Transações'}");
 
-                          // --- Tratamento dos Estados do WalletController ---
-                          final state = _walletController.state;
-
-                          if (state is WalletStateLoading) {
+                          if (walletState is WalletStateLoading) {
                             return const Center(child: CustomCircularProgressIndicator());
                           }
-
-                          if (state is WalletStateError) {
-                            return Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Text(
-                                  'Error loading transactions: ${state.message}',
-                                  textAlign: TextAlign.center,
-                                  style: AppTextStyles.mediumText16w500.apply(color: AppColors.outcome),
-                                ),
-                              ),
-                            );
+                          if (walletState is WalletStateError) {
+                            return Center(child: Text('Erro: ${walletState.message}'));
                           }
-
-                          if (state is WalletStateSuccess) {
+                          if (walletState is WalletStateSuccess) {
                             final List<TransactionModel> allTransactions = _walletController.transactions;
-
-                            // ***** CORREÇÃO APLICADA AQUI *****
-                            // Filtra a lista baseado na aba selecionada
-                            final List<TransactionModel> transactionsToShow = isUpcomingBills
-                                ? allTransactions.where((t) => !t.status).toList()  // Pendentes (status == false)
-                                : allTransactions.where((t) => t.status).toList();   // Concluídas (status == true)
-                            // *************************************
-
-                            // --- Exibe a Lista ou Mensagem de Vazio ---
-                            if (transactionsToShow.isEmpty) {
-                              return Center(
-                                child: Text(
-                                  isUpcomingBills
-                                      ? 'No upcoming bills found for this period.'
-                                      : 'No transactions found for this period.',
-                                  style: AppTextStyles.mediumText16w500.apply(color: AppColors.lightGrey),
-                                ),
-                              );
+                            debugPrint("[WalletPage - ListBuilder] Controller transactions count: ${allTransactions.length}");
+                            
+                            // Aplicar filtro com base na aba selecionada
+                            final List<TransactionModel> transactionsToShow;
+                            if (isUpcomingBills) { // Aba "Contas Futuras"
+                              transactionsToShow = allTransactions.where((t) => !t.status).toList(); // Pendentes (status == false)
+                            } else { // Aba "Transações"
+                              // DECIDA O FILTRO: Mostrar todas ou apenas as concluídas?
+                              transactionsToShow = allTransactions; // Mostra todas por padrão
+                              // transactionsToShow = allTransactions.where((t) => t.status).toList(); // Apenas concluídas (status == true)
                             }
+                            debugPrint("[WalletPage - ListBuilder] transactionsToShow count: ${transactionsToShow.length}");
 
-                            // Retorna a ListView de Transações
+                            if (transactionsToShow.isEmpty) {
+                              return Center(child: Text(isUpcomingBills ? 'Nenhuma conta futura.' : 'Nenhuma transação neste período.'));
+                            }
                             return TransactionListView(
-                              key: ValueKey('${_walletController.selectedDate}-${filterType}-${transactionsToShow.length}'),
+                              key: ValueKey('${_walletController.selectedDate.toString()}-${_optionsTabController.index}-${transactionsToShow.length}'),
                               transactionList: transactionsToShow,
-                              selectedDate: _walletController.selectedDate,
-                              filterType: filterType,
-                              onChange: () {
-                                // Recarrega os dados após delete/update
-                                _walletController.getTransactionsByDateRange();
-                                _balanceController.getBalances();
+                              selectedDate: _walletController.selectedDate, // Passa a data para o TransactionListView, se ele precisar
+                              filterType: isUpcomingBills ? 'upcomingBills' : 'transactions', // Passa o tipo de filtro
+                              onChange: () { // Callback para quando uma transação é alterada/deletada dentro da lista
+                                _fetchData(); // Recarrega tudo
                               },
                             );
                           }
-
-                          // Estado inicial ou não tratado
-                          return Center(
-                            child: Text(
-                              'Loading data...',
-                              style: AppTextStyles.mediumText16w500,
-                            ),
-                          );
+                          return const Center(child: Text("Carregando...")); // Estado inicial ou desconhecido
                         },
                       ),
                     ),
@@ -306,16 +252,16 @@ class _WalletPageState extends State<WalletPage>
     );
   }
 
-  // Helper widget para criar as abas de filtro (evita repetição)
   Widget _buildFilterTab(BuildContext context, String text, int index) {
-    // Usa o TabController para saber qual aba está ativa
+    // O AnimatedBuilder que envolve a lista também escuta _optionsTabController.
+    // Se a aparência da aba precisar mudar com base no índice, o setState em _onTabChange cuidará disso.
     bool isActive = _optionsTabController.index == index;
     return Tab(
       height: 40,
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-            color: isActive ? AppColors.iceWhite : AppColors.white,
+            color: isActive ? AppColors.iceWhite : AppColors.white, // Exemplo de mudança de cor
             borderRadius: const BorderRadius.all(Radius.circular(24.0)),
             border: Border.all(
               color: isActive ? AppColors.lightGrey : Colors.transparent,

@@ -84,6 +84,7 @@ class App extends StatelessWidget {
         NamedRoute.budgetCalculator: (context) => const BudgetCalculatorPage(),
         NamedRoute.notificationDemo: (context) => const NotificationDemoPage(),
 
+
         // +++ ROTA ADICIONADA/CORRIGIDA PARA ADD/EDIT META +++
         NamedRoute.addEditGoal: (context) {
           final args = ModalRoute.of(context)?.settings.arguments;

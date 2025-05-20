@@ -58,12 +58,6 @@ class ToolsPage extends StatelessWidget {
             disabled: false, // Habilitado
             iconColor: Colors.blue.shade600,
           ),
-          ElevatedButton(
-  onPressed: () {
-    Navigator.pushNamed(context, NamedRoute.notificationDemo);
-  },
-  child: Text('Teste Captura Notificação'),
-)
         ],
       ),
     );
