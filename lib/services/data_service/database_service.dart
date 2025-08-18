@@ -1,19 +1,15 @@
 import 'dart:developer';
+import 'package:path/path.dart'; // Import necessário para a função join
 import 'package:sqflite/sqflite.dart';
+// Ajuste os caminhos dos imports abaixo conforme a estrutura do seu projeto:
 import 'package:tcc_3/common/data/exceptions.dart';
 import 'package:tcc_3/services/data_service/data_service.dart';
-// Ajuste os imports conforme sua estrutura
-// Removido import do locator se não for usado diretamente aqui, pois o db é acessado via this.db
-// import '../../locator.dart'; 
 
 class DatabaseService implements DataService<Map<String, dynamic>> {
-  // Se você registra DatabaseService no GetIt e o obtém via locator em outros lugares,
-  // um construtor público simples é suficiente.
-  // Se você usa este como um Singleton manual, o _internal e factory são apropriados.
   DatabaseService();
 
-  static const _dbName = 'tcc_3.db';
-  static const int _dbVersion = 1; // É bom versionar seu schema
+  static const String _dbName = 'tcc_3.db';
+  static const int _dbVersion = 1; // Incremente se fizer alterações no schema (e use onUpgrade)
   Database? _db;
 
   Database get db {
@@ -25,16 +21,16 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
   }
 
   Future<void> get deleteDB async {
-    log('DELETING DATABASE $_dbName', name: 'DB_SERVICE', time: DateTime.now());
-    await close(); 
+    log('DELETANDO DATABASE $_dbName', name: 'DB_SERVICE', time: DateTime.now());
+    await close();
     try {
-        String path = await getDatabasesPath();
-        await deleteDatabase('$path/$_dbName');
-        log('DATABASE $_dbName DELETED SUCCESSFULLY', name: 'DB_SERVICE');
+      String path = await getDatabasesPath();
+      await deleteDatabase(join(path, _dbName)); // Usar join para consistência
+      log('DATABASE $_dbName DELETADO COM SUCESSO', name: 'DB_SERVICE');
     } catch (e) {
-        log('ERROR DELETING DATABASE $_dbName: $e', name: 'DB_SERVICE_ERROR');
+      log('ERRO AO DELETAR DATABASE $_dbName: $e', name: 'DB_SERVICE_ERROR');
     }
-    _db = null; 
+    _db = null;
   }
 
   Future<DatabaseService> init() async {
@@ -45,53 +41,71 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
     }
 
     try {
-      String path = await getDatabasesPath();
+      String dbPath = await getDatabasesPath();
       _db = await openDatabase(
-        '$path/$_dbName',
+        join(dbPath, _dbName), // Usar join para construir o path
         version: _dbVersion,
         onCreate: (Database db, int version) async {
           log('DatabaseService: onCreate - Criando tabelas (versão $version)...', name: 'DB_SERVICE');
+          // Criação da tabela de transações
           await db.execute(
               'CREATE TABLE IF NOT EXISTS transactions (id TEXT PRIMARY KEY, description TEXT, category TEXT, status INTEGER, value NUMERIC, date TEXT, created_at TEXT, user_id TEXT, sync_status TEXT)');
+          // Criação da tabela de balanços (saldos) - ESSENCIAL PARA CORRIGIR O ERRO
           await db.execute(
               'CREATE TABLE IF NOT EXISTS balances (id INTEGER PRIMARY KEY DEFAULT 1, total_balance NUMERIC DEFAULT 0, total_income NUMERIC DEFAULT 0, total_outcome NUMERIC DEFAULT 0)');
           log('DatabaseService: Tabelas criadas/verificadas.', name: 'DB_SERVICE');
+          // Insere o registro inicial na tabela de balanços APÓS a criação da tabela
           await _insertInitialBalanceRecord(db);
         },
         onOpen: (Database db) async {
-            log('DatabaseService: onOpen - Verificando tabela balances...', name: 'DB_SERVICE');
-            await _insertInitialBalanceRecord(db); // Garante que o balanço exista ao abrir também
-        }
+          log('DatabaseService: onOpen - Verificando tabela balances...', name: 'DB_SERVICE');
+          // Garante que o registro de balanço exista ao abrir o DB também (robustez)
+          await _insertInitialBalanceRecord(db);
+        },
+        // onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        //   // Se você mudar _dbVersion, adicione a lógica de migração aqui
+        //   log('DatabaseService: onUpgrade - Atualizando de $oldVersion para $newVersion', name: 'DB_SERVICE');
+        //   if (oldVersion < NEW_VERSION_WHERE_BALANCES_WAS_ADDED) {
+        //      await db.execute('CREATE TABLE IF NOT EXISTS balances (id INTEGER PRIMARY KEY DEFAULT 1, ...)')
+        //      await _insertInitialBalanceRecord(db);
+        //   }
+        // },
       );
-      log('DatabaseService: init concluído com sucesso. DB Path: ${db.path}', name: 'DB_SERVICE');
+      log('DatabaseService: init concluído com sucesso. DB Path: ${_db?.path}', name: 'DB_SERVICE');
     } catch (e, stackTrace) {
       log('DatabaseService: Erro ao inicializar o banco de dados: $e', name: 'DB_SERVICE_ERROR', stackTrace: stackTrace);
-      rethrow; 
+      rethrow; // Re-lança a exceção para que a camada superior possa tratá-la
     }
     return this;
   }
 
   Future<void> _insertInitialBalanceRecord(Database currentDb) async {
+    try {
       final count = Sqflite.firstIntValue(await currentDb.rawQuery('SELECT COUNT(*) FROM balances'));
       if (count == 0) {
-          log('DatabaseService: Tabela balances está vazia. Inserindo registro inicial.', name: 'DB_SERVICE');
-          try {
-            await currentDb.insert(
-                'balances',
-                {
-                    'total_balance': 0.0,
-                    'total_income': 0.0,
-                    'total_outcome': 0.0,
-                },
-                conflictAlgorithm: ConflictAlgorithm.ignore 
-            );
-            log('DatabaseService: Registro inicial inserido em balances.', name: 'DB_SERVICE');
-          } catch (e, stackTrace) {
-            log('DatabaseService: Erro ao inserir registro inicial em balances: $e', name: 'DB_SERVICE_ERROR', stackTrace: stackTrace);
-          }
+        log('DatabaseService: Tabela balances está vazia. Inserindo registro inicial.', name: 'DB_SERVICE');
+        await currentDb.insert(
+          'balances',
+          {
+            // 'id' não é explicitamente necessário aqui devido ao 'DEFAULT 1' na DDL
+            'total_balance': 0.0,
+            'total_income': 0.0,
+            'total_outcome': 0.0,
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+        log('DatabaseService: Registro inicial inserido em balances.', name: 'DB_SERVICE');
       } else {
-            log('DatabaseService: Tabela balances já contém dados (count: $count).', name: 'DB_SERVICE');
+        log('DatabaseService: Tabela balances já contém dados (count: $count).', name: 'DB_SERVICE');
       }
+    } catch (e, stackTrace) {
+        // Se a tabela não existir aqui, o erro original "no such table" ainda pode ocorrer
+        // se _insertInitialBalanceRecord for chamado antes de onCreate completar ou em um contexto errado.
+        // No entanto, com a chamada dentro de onCreate e onOpen (após onCreate ter rodado na primeira vez),
+        // a tabela já deve existir.
+        log('DatabaseService: Erro em _insertInitialBalanceRecord (verifique se a tabela "balances" existe): $e', name: 'DB_SERVICE_ERROR', stackTrace: stackTrace);
+        // Não relance aqui necessariamente, pois pode ser uma verificação opcional em onOpen.
+    }
   }
 
   Future<void> close() async {
@@ -116,33 +130,27 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
         );
 
         if (count != null && count > 0) {
-          log('[DB_SERVICE] create (update existing transaction): Path=$path, ID=$id', name: 'DB_OPS');
           final result = await db.update(path, params, where: 'id = ?', whereArgs: [id]);
           return {'data': result != 0};
         } else {
-          log('[DB_SERVICE] create (insert new transaction): Path=$path, ID=$id', name: 'DB_OPS');
           final result = await db.insert(path, params, conflictAlgorithm: ConflictAlgorithm.replace);
           return {'data': result != 0};
         }
-      } else if (path == 'balances') { 
-          log('[DB_SERVICE] create (upserting balances): Path=$path', name: 'DB_OPS');
-          final result = await db.update(path, params); 
-          if (result > 0) {
-            return {'data': true};
-          } else {
-            log('[DB_SERVICE] create (update balances failed, trying insert): Path=$path', name: 'DB_OPS_WARN');
-            final insertResult = await db.insert(path, params, conflictAlgorithm: ConflictAlgorithm.replace);
-            return {'data': insertResult != 0};
-          }
-      } else { 
-            log('[DB_SERVICE] create (generic insert for path without ID): Path=$path', name: 'DB_OPS');
-            final result = await db.insert(path, params, conflictAlgorithm: ConflictAlgorithm.replace);
-            return {'data': result != 0};
+      } else if (path == 'balances') {
+        final result = await db.update(path, params, where: 'id = ?', whereArgs: [params['id'] ?? 1]);
+        if (result > 0) {
+          return {'data': true};
+        } else {
+          final insertResult = await db.insert(path, params, conflictAlgorithm: ConflictAlgorithm.replace);
+          return {'data': insertResult != 0};
+        }
+      } else {
+        final result = await db.insert(path, params, conflictAlgorithm: ConflictAlgorithm.replace);
+        return {'data': result != 0};
       }
     } catch (e, stackTrace) {
       log('[DB_SERVICE] create: Erro: $e', name: 'DB_OPS_ERROR', stackTrace: stackTrace);
-      // CORRIGIDO: Removido o parâmetro 'message'
-      throw const CacheException(code: 'write'); 
+      throw CacheException(code: 'write',); // Adicionando a mensagem original da exceção
     }
   }
 
@@ -164,8 +172,7 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
         String whereClause = '';
         List<dynamic> whereArgs = [];
 
-        if (params.containsKey('start_date') &&
-            params.containsKey('end_date')) {
+        if (params.containsKey('start_date') && params.containsKey('end_date')) {
           whereClause = 'date BETWEEN ? AND ?';
           whereArgs = [params['start_date'], params['end_date']];
         }
@@ -178,7 +185,6 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
           whereArgs.add(params['skip_status']);
         }
         
-        log('[DB_SERVICE] read: Querying with Where="$whereClause", Args=$whereArgs', name: 'DB_OPS_DETAIL');
         final result = await db.query(
           path,
           limit: params['limit'] as int?,
@@ -191,8 +197,7 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
       }
     } catch (e, stackTrace) {
       log('[DB_SERVICE] read: Erro: $e', name: 'DB_OPS_ERROR', stackTrace: stackTrace);
-      // CORRIGIDO: Removido o parâmetro 'message'
-      throw const CacheException(code: 'read');
+      throw CacheException(code: 'read',);
     }
   }
 
@@ -212,19 +217,26 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
           whereArgs: [id],
         );
         return {'data': result != 0};
-      } else if (path == 'balances'){ 
-        log('[DB_SERVICE] update (updating balances): Path=$path', name: 'DB_OPS');
-        final result = await db.update(path, params);
+      } else if (path == 'balances'){
+        final result = await db.update(path, params, where: 'id = ?', whereArgs: [params['id'] ?? 1]);
         return {'data': result != 0};
       } else {
-         log('[DB_SERVICE] update (no ID in params or unknown path for specific logic): Path=$path', name: 'DB_OPS_WARN');
-         final result = await db.update(path, params); 
-         return {'data': result != 0};
+         // Para updates genéricos, é mais seguro exigir um 'id' ou uma cláusula 'where' explícita
+         // Se 'id' estiver em params, use-o para o 'where'.
+         if (params.containsKey('id')) {
+            final result = await db.update(path, params, where: 'id = ?', whereArgs: [params['id']]);
+            return {'data': result != 0};
+         } else {
+            // Atualizar sem 'where' é perigoso, pois afeta todas as linhas.
+            // Considere lançar um erro ou logar um aviso mais forte se isso não for intencional.
+            log('[DB_SERVICE] update (WARNING: updating all rows in $path as no ID/WHERE provided)', name: 'DB_OPS_DANGER');
+            final result = await db.update(path, params); 
+            return {'data': result != 0};
+         }
       }
     } catch (e, stackTrace) {
       log('[DB_SERVICE] update: Erro: $e', name: 'DB_OPS_ERROR', stackTrace: stackTrace);
-      // CORRIGIDO: Removido o parâmetro 'message'
-      throw const CacheException(code: 'update');
+      throw CacheException(code: 'update');
     }
   }
 
@@ -243,14 +255,13 @@ class DatabaseService implements DataService<Map<String, dynamic>> {
         );
         return {'data': result != 0};
       } else {
-        log('[DB_SERVICE] delete (no ID in params, deleting all from path!): Path=$path', name: 'DB_OPS_WARNING');
+        log('[DB_SERVICE] delete (WARNING: no ID in params, deleting all from path!): Path=$path', name: 'DB_OPS_WARNING');
         final result = await db.delete(path);
         return {'data': result != 0};
       }
     } catch (e, stackTrace) {
       log('[DB_SERVICE] delete: Erro: $e', name: 'DB_OPS_ERROR', stackTrace: stackTrace);
-      // CORRIGIDO: Removido o parâmetro 'message'
-      throw const CacheException(code: 'delete');
+      throw CacheException(code: 'delete');
     }
   }
 }

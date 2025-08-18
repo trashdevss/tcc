@@ -35,7 +35,8 @@ class JoveNotificationService {
   ReceivePort? _receivePort;
   static const String _picpayPackageName = "com.picpay";
   static const String _nubankPackageName = "com.nu.production";
-  // static const String _btgPackageName = "com.btgpactual.banking"; // Descomente se for usar BTG
+  static const String _interPackageName = "br.com.intermedium";
+  // static const String _btgPackageName = "com.btgpactual.banking"; 
 
   final TransactionRepository _transactionRepo = locator<TransactionRepository>();
   final AuthService _authService = locator<AuthService>();
@@ -43,8 +44,6 @@ class JoveNotificationService {
   @pragma('vm:entry-point')
   static void _notificationCallback(NotificationEvent event) {
     debugPrint("[Plugin Raw Event] Pkg: ${event.packageName}, Title: ${event.title}, Text: ${event.text}, CreateAt: ${event.createAt}, ID: ${event.id}");
-    // debugPrint("[Plugin Raw Event] Extras: ${event.extras}"); // Descomente se sua versão do plugin tiver 'extras'
-
     final SendPort? send = IsolateNameServer.lookupPortByName("_jove_notification_listener_");
     send?.send(event);
   }
@@ -52,25 +51,16 @@ class JoveNotificationService {
   @pragma('vm:entry-point')
   Future<void> initialize() async {
     if (_isInitialized) return;
-
     try {
       NotificationsListener.initialize(callbackHandle: _notificationCallback);
-
       _receivePort = ReceivePort();
       IsolateNameServer.removePortNameMapping("_jove_notification_listener_");
-      IsolateNameServer.registerPortWithName(
-        _receivePort!.sendPort, 
-        "_jove_notification_listener_"
-      );
-
+      IsolateNameServer.registerPortWithName(_receivePort!.sendPort, "_jove_notification_listener_");
       _receivePort?.listen((message) {
         if (message is NotificationEvent) {
           _handleNotification(message);
-        } else if (message is Map) {
-          debugPrint("[JoveNotificationService] Received Map message (não esperado neste fluxo específico): $message");
         }
       });
-
       _isInitialized = true;
       debugPrint("[JoveNotificationService] Initialized successfully");
     } catch (e, stack) {
@@ -84,12 +74,11 @@ class JoveNotificationService {
     debugPrint("[_handleNotification] Handling Plugin Event: Pkg='${event.packageName}', Title='${event.title}', Text='${event.text}'");
     try {
       final appEvent = AppNotificationEvent.fromPluginEvent(event);
+      if (!_notificationController.isClosed) _notificationController.add(appEvent);
       
-      if (!_notificationController.isClosed) {
-        _notificationController.add(appEvent);
-      }
-      // Adicione _btgPackageName aqui se quiser processar BTG
-      if (event.packageName == _picpayPackageName || event.packageName == _nubankPackageName) {
+      if (event.packageName == _picpayPackageName || 
+          event.packageName == _nubankPackageName ||
+          event.packageName == _interPackageName) {
         _processFinancialNotification(appEvent);
       }
     } catch (e, stack) {
@@ -183,59 +172,24 @@ class JoveNotificationService {
       _transactionRepo.addTransaction(
         transaction: transaction,
         userId: userId,
-      ).then((result) { // 'result' é o que o seu _transactionRepo.addTransaction retorna
-
-        // --- INÍCIO DOS LOGS DE DEPURAÇÃO ADICIONADOS ---
-        debugPrint("[JoveNotificationService DEBUG THEN] Callback do addTransaction alcançado.");
-        debugPrint("[JoveNotificationService DEBUG THEN] Objeto result completo: ${result.toString()}");
+      ).then((result) { 
+        debugPrint("[JoveNotificationService THEN] Callback do addTransaction alcançado.");
+        debugPrint("[JoveNotificationService THEN] Objeto result completo: ${result.toString()}");
+        debugPrint("[JoveNotificationService THEN] result.isSuccess: ${result.isSuccess}"); 
+        debugPrint("[JoveNotificationService THEN] _transactionController.isClosed: ${_transactionController.isClosed}");
         
-        bool actualIsSuccess = false; // Valor padrão
-        String successPropertyAccessError = "Nenhum erro ao acessar propriedade de sucesso.";
-        String? resultErrorMessage; // Para armazenar a mensagem de erro do result, se houver
-
-        try {
-          // *** IMPORTANTE: Adapte 'result.isSuccess' para a propriedade REAL ***
-          // *** que indica sucesso no seu objeto 'result'. ***
-          // *** Se 'result' não tiver 'isSuccess', esta linha vai dar erro. ***
-          actualIsSuccess = result.isSuccess; 
-          debugPrint("[JoveNotificationService DEBUG THEN] Valor de result.isSuccess: $actualIsSuccess");
-          debugPrint("[JoveNotificationService DEBUG THEN] Tipo de result.isSuccess: ${actualIsSuccess.runtimeType}");
-        } catch (e) {
-          successPropertyAccessError = "Erro ao acessar result.isSuccess: $e. Verifique a estrutura de 'result' no log 'Objeto result completo' acima para saber como verificar o SUCESSO.";
-          debugPrint("[JoveNotificationService DEBUG THEN] $successPropertyAccessError");
-        }
-
-        // Tenta acessar uma propriedade de erro, se existir (adapte 'error' para o nome real da propriedade)
-        try {
-            // Adapte 'result.error' para a forma correta de acessar a mensagem/objeto de erro no seu 'result'
-            if (result.error != null) { 
-                resultErrorMessage = result.error.toString();
-            }
-        } catch (e) {
-            // A propriedade 'error' pode não existir ou não ser acessível diretamente da forma tentada.
-            debugPrint("[JoveNotificationService DEBUG THEN] Não foi possível acessar result.error diretamente: $e");
-        }
-
-        debugPrint("[JoveNotificationService DEBUG THEN] _transactionController.isClosed: ${_transactionController.isClosed}");
-        // --- FIM DOS LOGS DE DEPURAÇÃO ADICIONADOS ---
-
-        // *** ADAPTE ESTA CONDIÇÃO à estrutura REAL do seu objeto 'result'. ***
-        if (actualIsSuccess == true && !_transactionController.isClosed) { 
+        if (result.isSuccess && !_transactionController.isClosed) { 
           _transactionController.add(parsed);
           debugPrint("[JoveNotificationService] Transaction EMITTED to stream: ${parsed.description}");
         } else {
           String reason = "";
-          if (actualIsSuccess != true) { // Se a tentativa de ler 'isSuccess' falhou, actualIsSuccess será false
-            reason += "Condição de sucesso NÃO atendida (valor avaliado para sucesso: $actualIsSuccess). $successPropertyAccessError ";
+          if (!result.isSuccess) {
+            reason += "Condição de sucesso NÃO atendida (result.isSuccess era false). ";
+            reason += "Erro reportado (se houver): ${result.error?.toString()}. "; 
           }
           if (_transactionController.isClosed) {
             reason += "_transactionController estava fechado.";
           }
-          if (resultErrorMessage != null) {
-              reason += " Mensagem de erro do result: $resultErrorMessage.";
-          }
-          // Se o result.toString() for útil para entender a falha, adicione-o
-          // reason += " Objeto result: ${result.toString()}.";
           debugPrint("[JoveNotificationService] FALHA ao emitir transação para o stream. Razão: $reason");
         }
       }).catchError((e, stack) {
@@ -248,6 +202,7 @@ class JoveNotificationService {
 
   @pragma('vm:entry-point')
   ParsedFinancialTransaction? _parseTransaction(AppNotificationEvent event) {
+    // ... (código _parseTransaction mantido como na última versão) ...
     try {
       final fullText = "${event.title ?? ''} ${event.text ?? ''}".trim();
       if (fullText.isEmpty) {
@@ -288,6 +243,7 @@ class JoveNotificationService {
 
   @pragma('vm:entry-point')
   double? _parseAmount(String text) {
+    // ... (código _parseAmount mantido) ...
     try {
       final match = RegExp(r"(?:R\$\s?)?(\d{1,3}(?:\.\d{3})*,\d{2})").firstMatch(text);
       if (match == null) return null;
@@ -301,6 +257,7 @@ class JoveNotificationService {
 
   @pragma('vm:entry-point')
   TransactionType _determineType(String text, String? packageName) {
+    // ... (código _determineType com lógica para Inter, Nubank, PicPay mantido) ...
     try {
       final lowerText = text.toLowerCase();
       debugPrint("[_determineType] Text: '$lowerText', Pkg: '$packageName'");
@@ -323,6 +280,19 @@ class JoveNotificationService {
         } else if (lowerText.contains("você pagou a") || lowerText.contains("pix enviado para")) {
           return TransactionType.expense;
         }
+      } else if (packageName == _interPackageName) { 
+        if (lowerText.contains("pix enviado") ||
+            lowerText.contains("você fez um pix") ||
+            lowerText.contains("pagamento realizado") ||
+            lowerText.contains("compra aprovada")) { 
+          debugPrint("[_determineType] Determined as EXPENSE (Inter)");
+          return TransactionType.expense;
+        } else if (lowerText.startsWith("pix recebido") || 
+                   lowerText.contains("crédito em conta") ||
+                   lowerText.contains("você recebeu um pix")) { 
+          debugPrint("[_determineType] Determined as INCOME (Inter)");
+          return TransactionType.income;
+        }
       }
 
       if (lowerText.contains("pagamento realizado") || 
@@ -344,6 +314,7 @@ class JoveNotificationService {
 
   @pragma('vm:entry-point')
   String _extractDescription(String text, TransactionType type, String? packageName) {
+    // ... (código _extractDescription com lógica para Inter, Nubank, PicPay mantido) ...
     try {
       final lowerText = text.toLowerCase();
       
@@ -391,6 +362,24 @@ class JoveNotificationService {
            }
            return "Pix enviado (PicPay)";
         }
+      } else if (packageName == _interPackageName) {
+        if (type == TransactionType.expense) {
+          if (lowerText.contains("você fez um pix") && lowerText.contains("para ")) {
+            final recipientMatch = RegExp(r'para\s+(.*?)\.', caseSensitive: false).firstMatch(text);
+            if (recipientMatch != null && recipientMatch.group(1) != null) {
+              return "Pix para ${recipientMatch.group(1)!.trim()}";
+            }
+            return "Pix enviado (Inter)";
+          }
+        } else if (type == TransactionType.income) {
+          if (lowerText.startsWith("pix recebido") && lowerText.contains("te enviou um pix")) {
+            final senderMatch = RegExp(r'pix recebido\s+(.*?)\s+te enviou um pix', caseSensitive: false).firstMatch(text);
+            if (senderMatch != null && senderMatch.group(1) != null && senderMatch.group(1)!.isNotEmpty) {
+              return "Pix de ${senderMatch.group(1)!.trim()}";
+            }
+            return "Pix recebido (Inter)"; 
+          }
+        }
       }
       
       if (type == TransactionType.expense) {
@@ -416,6 +405,7 @@ class JoveNotificationService {
 
   @pragma('vm:entry-point')
   String _extractBetween(String text, String start, String end) {
+    // ... (código _extractBetween mantido) ...
     try {
       final lowerText = text.toLowerCase();
       final lowerStart = start.toLowerCase();
@@ -436,6 +426,7 @@ class JoveNotificationService {
 
   @pragma('vm:entry-point')
   String _determineCategory(String text, TransactionType type, String? packageName) {
+    // ... (código _determineCategory com lógica para Inter, Nubank, PicPay mantido) ...
     try {
       final lowerText = text.toLowerCase();
       debugPrint("[_determineCategory] Text: '$lowerText', Pkg: '$packageName', Type: '$type'");
@@ -452,6 +443,13 @@ class JoveNotificationService {
         if (lowerText.contains("pagamento de boleto")) return "Pagamento de Contas";
       } else if (packageName == _picpayPackageName) {
         if (lowerText.contains("pix")) return "Transferencia Pix";
+      } else if (packageName == _interPackageName) { 
+        if (lowerText.contains("pix enviado") || lowerText.contains("você fez um pix")) {
+          return "Transferencia Pix"; 
+        }
+        if (lowerText.contains("pix recebido")) { 
+          return "Transferencia Pix"; 
+        }
       }
 
       const categories = {
@@ -477,6 +475,7 @@ class JoveNotificationService {
 
   @pragma('vm:entry-point')
   Future<void> dispose() async {
+    // ... (código do dispose mantido) ...
     try {
       await stopService();
       _receivePort?.close();
@@ -490,8 +489,49 @@ class JoveNotificationService {
       debugPrint("[JoveNotificationService] Error disposing: $e\n$stack");
     }
   }
-}
 
+  // --- MÉTODOS DE TESTE ADICIONADOS ---
+  void processSimulatedAppEventForTesting(AppNotificationEvent appEvent) {
+    debugPrint("[SIMULATION] processSimulatedAppEventForTesting called with Pkg: ${appEvent.packageName}, Title: ${appEvent.title}, Text: ${appEvent.text}");
+    if (appEvent.packageName == _picpayPackageName ||
+        appEvent.packageName == _nubankPackageName ||
+        appEvent.packageName == _interPackageName) {
+      _processFinancialNotification(appEvent);
+    } else {
+      debugPrint("[SIMULATION] Package ${appEvent.packageName} is not targeted for financial processing.");
+    }
+  }
+
+  void testParseInterPixEnviado() {
+    debugPrint("--- SIMULANDO NOTIFICAÇÃO INTER: PIX ENVIADO ---");
+    final simulatedAppEvent = AppNotificationEvent(
+      packageName: _interPackageName,
+      title: "Pix enviado",
+      text: "Você fez um Pix no valor de R\$ 1,00 para Gabriel Vinicius Antunes.",
+      id: 77701, 
+      timestamp: DateTime.now(),
+    );
+    processSimulatedAppEventForTesting(simulatedAppEvent);
+    debugPrint("--- FIM DA SIMULAÇÃO INTER: PIX ENVIADO ---");
+  }
+
+  void testParseInterPixRecebido() {
+    debugPrint("--- SIMULANDO NOTIFICAÇÃO INTER: PIX RECEBIDO ---");
+    final simulatedAppEvent = AppNotificationEvent(
+      packageName: _interPackageName,
+      title: "Pix recebido",
+      text: "Gabriel Vinicius Antunes te enviou um Pix de R\$ 1,00 creditado na sua conta final ***23241-3.",
+      id: 77702,
+      timestamp: DateTime.now(),
+    );
+    processSimulatedAppEventForTesting(simulatedAppEvent);
+    debugPrint("--- FIM DA SIMULAÇÃO INTER: PIX RECEBIDO ---");
+  }
+  // --- FIM DOS MÉTODOS DE TESTE ---
+
+} // Fim da classe JoveNotificationService
+
+// --- Classes AppNotificationEvent, TransactionType, ParsedFinancialTransaction mantidas como estavam ---
 @pragma('vm:entry-point')
 class AppNotificationEvent {
   final String? title;
@@ -562,54 +602,15 @@ class ParsedFinancialTransaction {
   DateTime get date => DateTime.fromMillisecondsSinceEpoch(originalNotificationTimestamp);
 }
 
-// Certifique-se de que seu enum SyncStatus está definido em algum lugar acessível.
-// Exemplo:
 enum SyncStatus { initial, create, update, delete, synced, error }
 
-// Definição da sua classe Result ou como seu TransactionRepository indica sucesso/falha.
-// O código abaixo é um EXEMPLO genérico. Você PRECISA TER UMA DEFINIÇÃO REAL E CONSISTENTE
-// para a classe Result (ou como quer que seu repositório retorne) no seu projeto.
-// O importante é que ela tenha uma forma clara de indicar sucesso.
-
+// Lembre-se da sua classe Result e Failure
 /*
-// Se você tiver uma classe Result definida assim no seu projeto:
-// (por exemplo em 'package:tcc_3/common/data/data_result.dart' como vimos no seu repo)
-
-abstract class DataResult<T> {
-  // Se o seu DataResult tiver um getter como este que funciona:
+abstract class Result<T> {
   bool get isSuccess; 
+  Failure? get error; // Supondo que Failure seja sua classe de erro
   T? get data;
-  Failure? get error; // Supondo que Failure seja sua classe de erro customizada
 }
-
-// E implementações como:
-class SuccessDataResult<T> implements DataResult<T> {
-  @override
-  final T? data;
-  @override
-  bool get isSuccess => true;
-  @override
-  Failure? get error => null;
-  SuccessDataResult([this.data]);
-}
-
-class FailureDataResult<T> implements DataResult<T> {
-  @override
-  final Failure? error; // Supondo que sua classe Failure está definida
-  @override
-  bool get isSuccess => false;
-  @override
-  T? get data => null;
-  FailureDataResult(this.error);
-}
-
-// E sua classe Failure
-class Failure {
-  final String message;
-  final String? code;
-  Failure({required this.message, this.code});
-
-  @override
-  String toString() => 'Failure(message: $message, code: $code)';
-}
+// ... e suas implementações SuccessResult e ErrorResult ...
+// class Failure { ... }
 */

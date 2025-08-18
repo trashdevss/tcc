@@ -1,5 +1,6 @@
 // lib/common/helpers/category_icon_helper.dart
 
+import 'package:flutter/foundation.dart'; // Para debugPrint, se mantido
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart'; // Necessário para IconData
 
@@ -26,7 +27,7 @@ class CategoryIconHelper {
       case 'reembolsos':
         return FontAwesomeIcons.receipt;
       case 'receita': // Adicionado para cobrir Pix recebido ou outras receitas genéricas
-        return FontAwesomeIcons.arrowDownWideShort; // Exemplo de ícone para receita
+        return FontAwesomeIcons.arrowDownWideShort; 
 
       // --- DESPESAS ---
       case 'moradia':
@@ -49,10 +50,15 @@ class CategoryIconHelper {
         return FontAwesomeIcons.bagShopping;
       case 'viagens':
         return FontAwesomeIcons.planeDeparture;
-      case 'Transferência Pix':
-        return FontAwesomeIcons.houseChimney;  
       
-      // O case para 'Transferência' foi removido, pois a intenção é usar 'Contas' ou 'Receita'.
+      // --- ÍCONE PARA TRANSFERÊNCIA PIX ---
+      // Ajustado para 'transferencia pix' (sem acento) para corresponder à saída do JoveNotificationService
+      case 'transferencia pix': 
+        return FontAwesomeIcons.pix; // Ícone da marca PIX (ideal se disponível)
+        // Alternativas se FontAwesomeIcons.pix não estiver disponível ou não for desejado:
+        // return FontAwesomeIcons.moneyBillTransfer; 
+        // return FontAwesomeIcons.arrowRightArrowLeft;
+        // return FontAwesomeIcons.qrcode;
 
       // --- OUTROS ---
       case 'outros':
@@ -61,8 +67,11 @@ class CategoryIconHelper {
       // --- Ícone Padrão ---
       default:
         // Se chegar aqui, significa que o nome da categoria não bateu com nenhum case
-        debugPrint(
-            "CategoryIconHelper - Ícone não encontrado para categoria: '$category' (lower: '$lowerCaseCategory')");
+        // Mantenha o debugPrint se achar útil durante o desenvolvimento
+        if (kDebugMode) { // Apenas imprime em modo debug
+            print(
+             "CategoryIconHelper - Ícone não encontrado para categoria: '$category' (lower: '$lowerCaseCategory')");
+        }
         return FontAwesomeIcons.circleQuestion; // Interrogação
     }
   }

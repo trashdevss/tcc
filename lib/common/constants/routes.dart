@@ -1,4 +1,4 @@
-// Dentro da sua classe NamedRoute em lib/common/constants/routes.dart
+// lib/common/constants/routes.dart
 
 class NamedRoute {
   NamedRoute._();
@@ -21,7 +21,8 @@ class NamedRoute {
 
   // --- Rotas de Funcionalidades ---
   static const String transaction = "/transaction";
-  static const String addEditGoal = "/add-edit-goal"; // <<<--- ADICIONE ESTA LINHA
+  static const String addEditGoal = "/add-edit-goal";
+  static const String achievements = '/achievements'; // <<<--- ADICIONE ESTA LINHA
 
   // --- Rotas da Seção Ferramentas ---
   static const String tools = "/tools";

@@ -1,4 +1,5 @@
-import 'exceptions.dart'; // Presumo que este arquivo define sua classe 'Failure'
+// No seu arquivo data_result.dart
+import 'exceptions.dart'; // Seu arquivo de exceptions
 
 abstract class DataResult<S> {
   const DataResult();
@@ -16,11 +17,10 @@ abstract class DataResult<S> {
         (data) => data,
       );
 
-  // --- MODIFICAÇÃO AQUI ---
-  // Agora 'isSuccess' retorna true se for um _SuccessResult, e false se for um _FailureResult.
+  // --- MODIFICAÇÃO APLICADA AQUI ---
   bool get isSuccess => fold<bool>(
-        (error) => false, // Se for falha, isSuccess é false
-        (data) => true,   // Se for sucesso, isSuccess é true
+        (failure) => false, // Se é falha, isSuccess é false
+        (data) => true,   // Se é sucesso, isSuccess é true
       );
   // --- FIM DA MODIFICAÇÃO ---
 
@@ -34,8 +34,6 @@ class _SuccessResult<S> extends DataResult<S> {
   const _SuccessResult(this._value);
   final S _value;
 
-  // Não é mais necessário sobrescrever 'isSuccess' aqui se a classe base já o define corretamente.
-
   @override
   T fold<T>(
     T Function(Failure error) fnFailure,
@@ -48,8 +46,6 @@ class _SuccessResult<S> extends DataResult<S> {
 class _FailureResult<S> extends DataResult<S> {
   const _FailureResult(this._value);
   final Failure _value;
-
-  // Não é mais necessário sobrescrever 'isSuccess' aqui.
 
   @override
   T fold<T>(

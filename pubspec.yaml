@@ -61,6 +61,11 @@ dependencies:
   url_launcher: ^6.3.1
   notification_listener: ^1.0.2+1
   flutter_notification_listener: ^1.3.4
+  pdf: ^3.10.8             # Para criar o documento PDF
+  printing: ^5.12.0          # Para formatar e salvar o PDF facilmente
+  path_provider: ^2.1.3    # Para encontrar um lugar para salvar o arquivo
+  open_file: ^3.3.2          # Para abrir o arquivo PDF gerado
+  
 
 
 dev_dependencies:
@@ -89,6 +94,7 @@ flutter:
   assets:
       - assets/images/
       - assets/json/
+      - assets/images/achievements/ 
       
 
   # An image asset can refer to one or more resolution-specific "variants", see

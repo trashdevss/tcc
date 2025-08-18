@@ -1,19 +1,29 @@
 // lib/features/stats/stats_controller.dart
 
+import 'dart:io';
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-// Seus imports existentes (ajuste se necessário)
-// Certifique-se que 'date_formatter.dart' existe e define 'weeksInMonth' e 'week'
-// Se não existir, pode ser necessário remover ou reimplementar essa lógica.
-import 'package:tcc_3/common/extensions/date_formatter.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:tcc_3/common/models/transaction_model.dart';
+import 'package:tcc_3/features/metas/goal_model.dart';
+import 'package:tcc_3/features/metas/goals_repository.dart';
+import 'package:tcc_3/locator.dart';
 import 'package:tcc_3/repositories/transaction_repository.dart';
 import 'package:tcc_3/common/constants/app_colors.dart';
 import 'stats_state.dart'; // Seu state (Initial, Loading, Success, Error)
+
+// Extensão para deixar a primeira letra maiúscula (útil para o nome do mês)
+extension StringExtension on String {
+    String capitalize() {
+      return "${this[0].toUpperCase()}${substring(1)}";
+    }
+}
 
 // Enums e Classe LegendData (mantidos como na versão anterior)
 enum StatsPeriod { day, week, month, year }
@@ -24,10 +34,13 @@ class LegendData {
 }
 
 class StatsController extends ChangeNotifier {
+  
   StatsController({ required TransactionRepository transactionRepository, })
       : _transactionRepository = transactionRepository {
     _initializeDefaultReport();
+    
   }
+  
   final TransactionRepository _transactionRepository;
 
   // Formatadores
@@ -180,8 +193,177 @@ class StatsController extends ChangeNotifier {
         _changeState(StatsStateSuccess(), detailedLoading: _isDetailedReportLoading);
       },
     );
+  } 
+    // Cole este método dentro da classe StatsController
+
+// Em lib/features/stats/stats_controller.dart
+
+// SUBSTITUA O MÉTODO ANTIGO POR ESTE
+// COLE ESTE MÉTODO INTEIRO DENTRO DA SUA CLASSE StatsController
+  
+  // Em lib/features/stats/stats_controller.dart
+ 
+Future<String?> generateMonthlyPdfReport({required DateTime targetMonth}) async {
+  debugPrint("--- INICIANDO GERAÇÃO DE PDF PARA O MÊS: $targetMonth ---");
+
+  // 1. CALCULA DATAS (Mês selecionado e o anterior a ele)
+  final startOfSelectedMonth = DateTime(targetMonth.year, targetMonth.month, 1);
+  final endOfSelectedMonth = DateTime(targetMonth.year, targetMonth.month + 1, 0, 23, 59, 59, 999);
+  
+  final startOfPreviousMonth = DateTime(targetMonth.year, targetMonth.month - 1, 1);
+  final endOfPreviousMonth = DateTime(targetMonth.year, targetMonth.month, 0, 23, 59, 59, 999);
+
+  // 2. BUSCA AS TRANSAÇÕES DOS DOIS PERÍODOS
+  final results = await Future.wait([
+    _transactionRepository.getTransactionsByDateRange(startDate: startOfSelectedMonth, endDate: endOfSelectedMonth),
+    _transactionRepository.getTransactionsByDateRange(startDate: startOfPreviousMonth, endDate: endOfPreviousMonth),
+  ]);
+
+  List<TransactionModel> selectedMonthTransactions = [];
+  results[0].fold((l) => debugPrint("Erro: $l"), (r) => selectedMonthTransactions = r);
+  
+  List<TransactionModel> previousMonthTransactions = [];
+  results[1].fold((l) => debugPrint("Erro: $l"), (r) => previousMonthTransactions = r);
+
+  if (selectedMonthTransactions.isEmpty) {
+    return "NO_DATA";
   }
 
+  // 3. PROCESSA OS DADOS PARA O RELATÓRIO
+  final double selectedMonthIncome = selectedMonthTransactions.where((t) => t.value >= 0).fold(0.0, (sum, t) => sum + t.value);
+  final double selectedMonthExpense = selectedMonthTransactions.where((t) => t.value < 0).fold(0.0, (sum, t) => sum + t.value).abs();
+  final double selectedMonthNetBalance = selectedMonthIncome - selectedMonthExpense;
+  
+  final double previousMonthIncome = previousMonthTransactions.where((t) => t.value >= 0).fold(0.0, (sum, t) => sum + t.value);
+  final double previousMonthExpense = previousMonthTransactions.where((t) => t.value < 0).fold(0.0, (sum, t) => sum + t.value).abs();
+
+  final expenses = selectedMonthTransactions.where((t) => t.value < 0).toList();
+  expenses.sort((a, b) => a.value.compareTo(b.value));
+  final top5Expenses = expenses.take(5).toList();
+
+  final Map<String, double> spendingByCategory = {};
+  for (var exp in expenses) {
+    String categoryName = exp.category.isNotEmpty ? exp.category : 'Sem Categoria';
+    spendingByCategory[categoryName] = (spendingByCategory[categoryName] ?? 0.0) + exp.value.abs();
+  }
+
+  String financialTip = "Continue acompanhando suas finanças! Analisar seus hábitos regularmente ajuda a manter o controle.";
+  if (selectedMonthNetBalance < 0) {
+    financialTip = "Atenção! Seu saldo ficou negativo. É um bom momento para rever seus gastos e focar em criar uma reserva de emergência.";
+  } else if (selectedMonthNetBalance > 0) {
+    financialTip = "Parabéns! Você economizou neste mês. Continue assim e direcione essa economia para suas metas ou investimentos.";
+  }
+
+  // 4. CRIA O DOCUMENTO PDF
+  final pdf = pw.Document();
+  final font = await PdfGoogleFonts.robotoRegular();
+  final boldFont = await PdfGoogleFonts.robotoBold();
+  final dateFormatter = DateFormat('dd/MM/yyyy', 'pt_BR');
+  final currencyFormatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  final monthName = DateFormat.yMMMM('pt_BR').format(startOfSelectedMonth);
+
+  pdf.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(32),
+      header: (context) => pw.Container(
+        alignment: pw.Alignment.centerRight,
+        margin: const pw.EdgeInsets.only(bottom: 20.0),
+        child: pw.Text('Relatório Jovemony - ${monthName.capitalize()}', style: pw.TextStyle(font: font, color: PdfColors.grey))
+      ),
+      build: (context) => [
+        pw.Header(level: 0, text: 'Relatório Financeiro Mensal', textStyle: pw.TextStyle(font: boldFont, fontSize: 24)),
+        pw.Divider(thickness: 1.5),
+        pw.SizedBox(height: 20),
+
+        pw.Header(level: 1, text: 'Resumo do Mês', textStyle: pw.TextStyle(font: boldFont)),
+        pw.Table.fromTextArray(
+          cellStyle: pw.TextStyle(font: font, fontSize: 12),
+          cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.centerRight},
+          data: <List<String>>[
+            ['Total de Receitas:', currencyFormatter.format(selectedMonthIncome)],
+            ['Total de Despesas:', currencyFormatter.format(selectedMonthExpense)],
+            ['Saldo Final do Mês:', currencyFormatter.format(selectedMonthNetBalance)],
+          ],
+        ),
+        pw.SizedBox(height: 20),
+
+        pw.Header(level: 1, text: 'Comparativo com Mês Anterior', textStyle: pw.TextStyle(font: boldFont)),
+        pw.Table.fromTextArray(
+          headerStyle: pw.TextStyle(font: boldFont),
+          cellStyle: pw.TextStyle(font: font, fontSize: 12),
+          cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.centerRight, 2: pw.Alignment.centerRight},
+          data: <List<String>>[
+            ['Descrição', 'Mês Anterior', 'Mês do Relatório'],
+            ['Receitas', currencyFormatter.format(previousMonthIncome), currencyFormatter.format(selectedMonthIncome)],
+            ['Despesas', currencyFormatter.format(previousMonthExpense), currencyFormatter.format(selectedMonthExpense)],
+          ],
+        ),
+        pw.SizedBox(height: 30),
+        
+        pw.Header(level: 1, text: 'Gastos por Categoria', textStyle: pw.TextStyle(font: boldFont)),
+        pw.Table.fromTextArray(
+          headerStyle: pw.TextStyle(font: boldFont),
+          cellStyle: pw.TextStyle(font: font),
+          cellAlignments: {1: pw.Alignment.centerRight},
+          data: <List<String>>[
+            ['Categoria', 'Valor Gasto'],
+            ...spendingByCategory.entries.map((e) => [e.key, currencyFormatter.format(e.value)]).toList(),
+          ],
+        ),
+        pw.SizedBox(height: 30),
+
+        pw.Header(level: 1, text: 'Top 5 Maiores Despesas', textStyle: pw.TextStyle(font: boldFont)),
+        pw.Table.fromTextArray(
+          headerStyle: pw.TextStyle(font: boldFont),
+          cellStyle: pw.TextStyle(font: font),
+          cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.centerRight},
+          data: <List<String>>[
+            ['Descrição', 'Valor Gasto'],
+            ...top5Expenses.map((t) => [
+              t.description.isNotEmpty ? t.description : t.category, 
+              currencyFormatter.format(t.value.abs())
+            ]).toList(),
+          ],
+        ),
+        pw.SizedBox(height: 30),
+
+        pw.Header(level: 1, text: 'Análise e Dicas', textStyle: pw.TextStyle(font: boldFont)),
+        pw.Container(
+          padding: const pw.EdgeInsets.all(10),
+          decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.grey), borderRadius: pw.BorderRadius.circular(5)),
+          child: pw.Text(financialTip, style: pw.TextStyle(font: font, fontStyle: pw.FontStyle.italic)),
+        ),
+        pw.SizedBox(height: 30),
+
+        pw.Header(level: 1, text: 'Todos os Lançamentos', textStyle: pw.TextStyle(font: boldFont)),
+        pw.Table.fromTextArray(
+          headerStyle: pw.TextStyle(font: boldFont),
+          cellStyle: pw.TextStyle(font: font, fontSize: 10),
+          cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.centerLeft, 2: pw.Alignment.centerRight},
+          data: <List<String>>[
+            ['Data', 'Descrição', 'Valor'],
+            ...selectedMonthTransactions.map((t) => [
+              dateFormatter.format(DateTime.fromMillisecondsSinceEpoch(t.date)),
+              t.description.isNotEmpty ? t.description : t.category,
+              currencyFormatter.format(t.value)
+            ]).toList(),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  // 5. SALVA E RETORNA O CAMINHO
+  try {
+    final output = await getTemporaryDirectory();
+    final file = File("${output.path}/relatorio_${targetMonth.year}-${targetMonth.month}.pdf");
+    await file.writeAsBytes(await pdf.save());
+    return file.path;
+  } catch (e) {
+    return null;
+  }
+}
   Future<void> getDetailedReportData({required DateTime startDate, required DateTime endDate}) async {
     print("[StatsController] getDetailedReportData: $startDate to $endDate");
     _isDetailedReportLoading = true;

@@ -1,3 +1,5 @@
+// lib/features/profile/profile_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:tcc_3/common/extensions/extensions.dart';
 
@@ -240,23 +242,31 @@ class _ProfilePageState extends State<ProfilePage>
                                       ),
                                     ),
                                   ),
+
+                                  // --- BOTÃO DE CONQUISTAS ADICIONADO AQUI ---
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      Navigator.pushNamed(context, NamedRoute.achievements);
+                                    },
+                                    icon: const Icon(
+                                      Icons.emoji_events_outlined, // Ícone de troféu
+                                      color: AppColors.green,
+                                    ),
+                                    label: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        'Minhas Conquistas',
+                                        style: AppTextStyles.mediumText16w500
+                                            .apply(color: AppColors.green),
+                                        textAlign: TextAlign.start,
+                                      ),
+                                    ),
+                                  ),
+                                  // ------------------------------------------
+
                                   TextButton.icon(
                                     onPressed: () {
                                       _syncController.syncFromServer();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                                     },
                                     icon: const Icon(
                                       Icons.logout_outlined,

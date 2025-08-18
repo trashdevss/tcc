@@ -2,6 +2,7 @@
 
 import 'dart:developer';
 
+import 'package:tcc_3/services/achievement_service.dart';
 import 'package:flutter/material.dart';
 import 'package:tcc_3/common/features/balance_controller.dart';
 import 'package:tcc_3/common/helpers/category_icon_helper.dart'; // Verifique path
@@ -28,6 +29,8 @@ class _TransactionPageState extends State<TransactionPage>
     with SingleTickerProviderStateMixin, CustomSnackBar {
   final _transactionController = locator.get<TransactionController>();
   final _balanceController = locator.get<BalanceController>();
+  final _achievementService = locator.get<AchievementService>();
+
 
   final _formKey = GlobalKey<FormState>();
 
@@ -430,8 +433,16 @@ class _TransactionPageState extends State<TransactionPage>
                                   newTransaction: newTransaction,
                                 );
                               }
+                              final unlockedAchievement = await _achievementService.checkAchievements();
+  if (unlockedAchievement != null && mounted) {
+    showCustomSnackBar(
+      context: context,
+      text: '🎉 Conquista Desbloqueada: ${unlockedAchievement.title}',
+      type: SnackBarType.success
+    );
+  }
                               if (mounted && Navigator.canPop(context)) {
-                                Navigator.of(context).pop(true); // Retorna true para indicar sucesso
+                                Navigator.of(context).pop(true); 
                               }
                             } else {
                               log('Formulário inválido');
