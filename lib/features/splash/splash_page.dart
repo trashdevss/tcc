@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_3/common/constants/app_text_styles.dart';
-import 'package:tcc_3/common/constants/app_colors.dart';
-import 'package:tcc_3/common/constants/routes.dart';
-import 'package:tcc_3/common/extensions/sizes.dart';
-import 'package:tcc_3/features/splash/splash_controller.dart';
-import 'package:tcc_3/features/splash/splash_state.dart';
-import 'package:tcc_3/locator.dart';
- 
+import 'package:tcc_3/services/sync_services/sync_controller.dart';
+import 'package:tcc_3/services/sync_services/sync_state.dart';
+
+import '../../common/constants/constants.dart';
+import '../../common/extensions/extensions.dart';
+import '../../common/widgets/widgets.dart';
+import '../../locator.dart';
+import 'splash_controller.dart';
+import 'splash_state.dart';
+
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -14,29 +16,69 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class _SplashPageState extends State<SplashPage> with CustomModalSheetMixin {
   final _splashController = locator.get<SplashController>();
+  final _syncController = locator.get<SyncController>();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_)=> Sizes.init(context));
 
+    WidgetsBinding.instance.addPostFrameCallback((_) => Sizes.init(context));
 
     _splashController.isUserLogged();
-    _splashController.addListener(() {
-      if (_splashController.state is AuthenticatedUser) {
-        Navigator.pushReplacementNamed(context, NamedRoute.home);
-      } else {
-        Navigator.pushReplacementNamed(context, NamedRoute.initial);
-      }
-    });
+    _splashController.addListener(_handleSplashStateChange);
+    _syncController.addListener(_handleSyncStateChange);
   }
 
   @override
   void dispose() {
     _splashController.dispose();
+    _syncController.dispose();
     super.dispose();
+  }
+
+  void _handleSplashStateChange() {
+    if (_splashController.state is AuthenticatedUser) {
+      _syncController.syncFromServer();
+    } else {
+      Navigator.pushReplacementNamed(
+        context,
+        NamedRoute.initial,
+      );
+    }
+  }
+
+  void _handleSyncStateChange() {
+    final state = _syncController.state;
+
+    switch (state.runtimeType) {
+      case DownloadedDataFromServer:
+        _syncController.syncToServer();
+        break;
+      case UploadedDataToServer:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          NamedRoute.home,
+          (route) => false,
+        );
+        break;
+      case SyncStateError:
+      case UploadDataToServerError:
+      case DownloadDataFromServerError:
+        showCustomModalBottomSheet(
+          context: context,
+          content: (state as SyncStateError).message,
+          buttonText: 'Go to login',
+          isDismissible: false,
+          onPressed: () => Navigator.pushNamedAndRemoveUntil(
+            context,
+            NamedRoute.initial,
+            (route) => false,
+          ),
+        );
+        break;
+    }
   }
 
   @override
@@ -54,23 +96,16 @@ class _SplashPageState extends State<SplashPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.monetization_on,
-              size: 100,
-              color: Colors.white,
-            ),
-            const SizedBox(height: 20),
             Text(
-              'JoveMoney',
-              style: AppTextStyles.bigText50.copyWith(
-                color: Colors.white,
-                letterSpacing: 2.0,
-              ),
+              'financy',
+              style: AppTextStyles.bigText50.copyWith(color: AppColors.white),
             ),
-            const SizedBox(height: 20),
-            const CircularProgressIndicator(
-              color: Colors.white,
+            Text(
+              'Syncing data...',
+              style: AppTextStyles.smallText13.copyWith(color: AppColors.white),
             ),
+            const SizedBox(height: 16.0),
+            const CustomCircularProgressIndicator(),
           ],
         ),
       ),

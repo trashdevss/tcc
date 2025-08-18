@@ -34,7 +34,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  intl: ^0.20.2
+  intl: ^0.19.0
   connectivity_plus: ^4.0.2 
   get_it: ^8.0.3
   firebase_core: ^3.12.1
@@ -47,6 +47,26 @@ dependencies:
   graphql_flutter: ^5.1.2
   provider: ^6.1.4
   uuid: ^3.0.7
+  sqflite: ^2.4.2
+  database: ^0.4.0
+  integration_test:
+    sdk: flutter
+  foundation: ^0.0.5
+  dotenv: ^4.2.0
+  fl_chart: ^0.71.0
+  font_awesome_flutter: ^10.8.0
+  flutter_localization: ^0.3.2
+  flutter_localizations:
+    sdk: flutter
+  url_launcher: ^6.3.1
+  notification_listener: ^1.0.2+1
+  flutter_notification_listener: ^1.3.4
+  pdf: ^3.10.8             # Para criar o documento PDF
+  printing: ^5.12.0          # Para formatar e salvar o PDF facilmente
+  path_provider: ^2.1.3    # Para encontrar um lugar para salvar o arquivo
+  open_file: ^3.3.2          # Para abrir o arquivo PDF gerado
+  
+
 
 dev_dependencies:
   flutter_test:
@@ -73,6 +93,8 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
       - assets/images/
+      - assets/json/
+      - assets/images/achievements/ 
       
 
   # An image asset can refer to one or more resolution-specific "variants", see
